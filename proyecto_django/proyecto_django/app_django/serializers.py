@@ -16,12 +16,12 @@ class ProductoSerializer(serializers.ModelSerializer):
 class UsuarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Usuario
-        fields = ('nombre','contrasenia','rol','activo')
+        fields = ('usuario','contrasenia','rol','activo')
 
 class ClienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cliente
-        fields = ('nombre','apellido','email','usuario','domicilio','provincia','localidad','codigo_postal','activo')
+        fields = ('nombre','apellido','email','telefono','domicilio','localidad','provincia','codigo_postal','usuario','contrasenia','activo')
 
 class EstadoSerializer(serializers.ModelSerializer):
     class Meta:

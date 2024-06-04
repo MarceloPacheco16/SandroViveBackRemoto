@@ -23,7 +23,7 @@ class Producto (models.Model):
 
 
 class Usuario (models.Model):
-    nombre = models.CharField(max_length=15)
+    usuario = models.CharField(max_length=15)
     contrasenia = models.CharField(max_length=20)
     rol = models.CharField(max_length=15)
     activo = models.IntegerField()
@@ -33,11 +33,12 @@ class Cliente (models.Model):
     apellido = models.CharField(max_length=15)
     email = models.EmailField(max_length=30)
     telefono = models.CharField(max_length=15)
-    usuario = models.ForeignKey(Usuario, null=True, on_delete=models.SET_NULL)
     domicilio = models.CharField(max_length=50)
-    provincia = models.CharField(max_length=30)
     localidad = models.CharField(max_length=30)
+    provincia = models.CharField(max_length=30)
     codigo_postal = models.CharField(max_length=15)
+    usuario = models.CharField(max_length=15)
+    contrasenia = models.CharField(max_length=20)
     activo = models.IntegerField()
 
 
