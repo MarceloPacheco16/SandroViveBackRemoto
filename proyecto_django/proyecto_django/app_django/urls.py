@@ -10,10 +10,15 @@ urlpatterns = [
     re_path(r'^usuario/(?P<pk>[0-9]+)$', views.UsuarioDetail.as_view()),
     re_path(r'^cliente$', views.ClienteList.as_view()),
     re_path(r'^cliente/(?P<pk>[0-9]+)$', views.ClienteDetail.as_view()),
+    re_path(r'^empleado$', views.EmpleadoList.as_view()),
+    re_path(r'^empleado/(?P<pk>[0-9]+)$', views.EmpleadoDetail.as_view()),
     re_path(r'^estado$', views.EstadoList.as_view()),
     re_path(r'^estado/(?P<pk>[0-9]+)$', views.EstadoDetail.as_view()),
     re_path(r'^pedido$', views.PedidoList.as_view()),
     re_path(r'^pedido/(?P<pk>[0-9]+)$', views.PedidoDetail.as_view()),
     re_path(r'^pedido_producto$', views.Pedido_ProductoList.as_view()),
     re_path(r'^pedido_producto/(?P<pk>[0-9]+)$', views.Pedido_ProductoDetail.as_view()),
+    # path('usuario/login/', views.LoginView.as_view(), name='login'),
+    # path('auth/', views.AuthenticateUser.as_view()),  # Nueva ruta para autenticación
+    path('verificar-credenciales/', views.verificar_credenciales),
 ]

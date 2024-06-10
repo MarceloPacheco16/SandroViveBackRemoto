@@ -1,5 +1,6 @@
 from django.db import models
 
+from django.contrib.auth.hashers import make_password, check_password  # Importa make_password y check_password
 # Create your models here.
 
 class Categoria (models.Model):
@@ -23,24 +24,46 @@ class Producto (models.Model):
 
 
 class Usuario (models.Model):
-    usuario = models.CharField(max_length=15)
-    contrasenia = models.CharField(max_length=20)
-    rol = models.CharField(max_length=15)
+    email = models.EmailField(max_length=30)
+    contrasenia = models.CharField(max_length=128)
+    cant_intentos = models.IntegerField()
     activo = models.IntegerField()
+
+    def save(self, *args, **kwargs):
+        if not self.pk:  # Solo encripta la contraseña si es un nuevo objeto
+            self.contrasenia = make_password(self.contrasenia)
+        super().save(*args, **kwargs)
+        
+    # def save(self, *args, **kwargs):
+    #     if self.pk is None:  # Only hash the password when the user is created
+    #         self.contrasenia = make_password(self.contrasenia)
+    #     super().save(*args, **kwargs)
+
+    # def check_password(self, password):
+    #     return check_password(password, self.contrasenia)
+    
+    # def save(self, *args, **kwargs):
+    #     if not self.pk:  # Si es un objeto nuevo, encripta la contraseña
+    #         self.contrasenia = make_password(self.contrasenia)
+    #     super().save(*args, **kwargs)
 
 class Cliente (models.Model):
     nombre = models.CharField(max_length=15)
     apellido = models.CharField(max_length=15)
-    email = models.EmailField(max_length=30)
     telefono = models.CharField(max_length=15)
     domicilio = models.CharField(max_length=50)
     localidad = models.CharField(max_length=30)
     provincia = models.CharField(max_length=30)
     codigo_postal = models.CharField(max_length=15)
-    usuario = models.CharField(max_length=15)
-    contrasenia = models.CharField(max_length=20)
+    usuario = models.ForeignKey(Usuario, null=True, on_delete=models.SET_NULL)
     activo = models.IntegerField()
 
+class Empleado (models.Model):
+    nombre = models.CharField(max_length=15)
+    apellido = models.CharField(max_length=15)
+    rol = models.CharField(max_length=15)
+    usuario = models.ForeignKey(Usuario, null=True, on_delete=models.SET_NULL)
+    activo = models.IntegerField()
 
 class Estado (models.Model):
     tipo_estado = models.CharField(max_length=10)
