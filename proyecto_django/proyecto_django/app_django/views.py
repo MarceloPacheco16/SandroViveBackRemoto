@@ -200,24 +200,78 @@ class Pedido_ProductoDetail(generics.RetrieveUpdateDestroyAPIView):
 #     else:
 #         return HttpResponse(status=status.HTTP_400_BAD_REQUEST)
 
+# @csrf_exempt
+# def verificar_credenciales(request):
+#     if request.method == 'GET':
+#         email = request.GET.get('email')
+#         contrasenia = request.GET.get('contrasenia')
+
+#         try:
+#             usuario = Usuario.objects.get(email=email)
+#             if check_password(contrasenia, usuario.contrasenia):
+#                 usuario_data = {
+#                     'id': usuario.id,
+#                     'email': usuario.email,
+#                     # Agrega otros campos de Usuario si es necesario
+#                 }
+#                 return JsonResponse(usuario_data)
+#             else:
+#                 return JsonResponse({"detail": "Invalid credentials"}, status=401)
+#         except Usuario.DoesNotExist:
+#             return JsonResponse({"detail": "User not found"}, status=404)
+#     else:
+#         return JsonResponse({"detail": "Method not allowed"}, status=405)
+
 @csrf_exempt
 def verificar_credenciales(request):
+    # Verificar que el método de la solicitud sea GET
     if request.method == 'GET':
+        # Obtener parámetros 'email' y 'contrasenia' de la solicitud GET
         email = request.GET.get('email')
         contrasenia = request.GET.get('contrasenia')
 
         try:
+            # Intentar obtener el usuario con el email proporcionado
             usuario = Usuario.objects.get(email=email)
+            
+            # Verificar si el usuario está bloqueado
+            if usuario.activo == 2:
+                return JsonResponse({"detalle": "El usuario está bloqueado"}, status=403)
+
+            # Verificar si la contraseña es correcta
             if check_password(contrasenia, usuario.contrasenia):
+                # Preparar los datos del usuario para la respuesta
                 usuario_data = {
                     'id': usuario.id,
                     'email': usuario.email,
-                    # Agrega otros campos de Usuario si es necesario
+                    'activo': usuario.activo,
+                    # Agregar otros campos de Usuario si es necesario
                 }
+                # Resetear el conteo de intentos fallidos
+                usuario.cant_intentos = 0
+                # Guardar los cambios en la base de datos
+                usuario.save()
+                # Devolver los datos del usuario en una respuesta JSON
                 return JsonResponse(usuario_data)
             else:
-                return JsonResponse({"detail": "Invalid credentials"}, status=401)
+                # Incrementar el conteo de intentos fallidos
+                usuario.cant_intentos += 1
+                # Verificar si los intentos fallidos son menores a 3
+                if usuario.cant_intentos < 3:
+                    # Guardar los cambios en la base de datos
+                    usuario.save()
+                    # Devolver una respuesta indicando credenciales inválidas
+                    return JsonResponse({"detalle": "Email o Contraseña incorrectos"}, status=401)
+                # Si los intentos fallidos son 3 o más, bloquear al usuario
+                if usuario.cant_intentos >= 3:
+                    usuario.activo = 2  # Bloquear usuario
+                    # Guardar los cambios en la base de datos
+                    usuario.save()
+                    # Devolver una respuesta indicando que el usuario está bloqueado
+                    return JsonResponse({"detalle": "Credenciales inválidas, usuario bloqueado"}, status=403)
         except Usuario.DoesNotExist:
-            return JsonResponse({"detail": "User not found"}, status=404)
+            # Devolver una respuesta indicando que el usuario no fue encontrado
+            return JsonResponse({"detalle": "Usuario no encontrado"}, status=404)
     else:
-        return JsonResponse({"detail": "Method not allowed"}, status=405)
+        # Devolver una respuesta indicando que el método no está permitido
+        return JsonResponse({"detalle": "Método no permitido"}, status=405)

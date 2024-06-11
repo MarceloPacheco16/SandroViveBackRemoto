@@ -24,10 +24,10 @@ class Producto (models.Model):
 
 
 class Usuario (models.Model):
-    email = models.EmailField(max_length=30)
+    email = models.EmailField(max_length=30, unique=True)
     contrasenia = models.CharField(max_length=128)
-    cant_intentos = models.IntegerField()
-    activo = models.IntegerField()
+    cant_intentos = models.IntegerField(default=0)
+    activo = models.IntegerField(default=1) # 0: Inactivo 1: Activo, 2: Bloqueado
 
     def save(self, *args, **kwargs):
         if not self.pk:  # Solo encripta la contraseña si es un nuevo objeto
