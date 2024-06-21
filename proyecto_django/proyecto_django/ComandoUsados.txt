@@ -1,0 +1,23 @@
+TODO ESTOS COMANDOS SE REALIZAN ESTAN EN LA UBICACION DE db.sqlite3
+
+COMO IMPORTAR REGISTROS A UNA TABLA:
+D:\dsweb\ProyectoSandro\SandroViveBack\proyecto_django\proyecto_django>sqlite3
+SQLite version 3.46.0 2024-05-23 13:25:27 (UTF-16 console I/O)
+Enter ".help" for usage hints.
+Connected to a transient in-memory database.
+Use ".open FILENAME" to reopen on a persistent database.
+sqlite> .open db.sqlite3
+sqlite> .mode csv
+sqlite> .separator ";"
+sqlite> .import Provincia.csv provincia
+sqlite> .import Provincia.csv app_django_provincia
+Provincia.csv:1: INSERT failed: datatype mismatch
+sqlite> .import Localidad.csv app_django_localidad
+Localidad.csv:1: INSERT failed: datatype mismatch
+
+COMO EXPORTAR MI BASE DE DATOS DE EXTENSION "SQLITE3" A "SQL"
+sqlite3 db.sqlite3 .dump > dump.sql
+
+Se intento usar estos scripts para pasar a MySQL pero no funcionaron
+sqlite2mysql.py
+sqlite3-to-mysql.py

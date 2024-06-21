@@ -6,7 +6,7 @@ from django.contrib.auth.hashers import make_password, check_password  # Importa
 class Categoria (models.Model):
     nombre = models.CharField(max_length=15)
     descripcion = models.CharField(max_length=30)
-    activo = models.IntegerField()
+    activo = models.IntegerField() # 0: Inactivo 1: Activo
 
 class Producto (models.Model):
     nombre = models.CharField(max_length=15)
@@ -20,8 +20,14 @@ class Producto (models.Model):
     cantidad_limite = models.IntegerField()
     imagen = models.ImageField(blank=True)
     observaciones = models.TextField(blank=True, max_length=200)
-    activo = models.IntegerField()
+    activo = models.IntegerField() # 0: Inactivo 1: Activo
 
+class Provincia (models.Model):
+    descripcion = models.CharField(max_length=60)
+
+class Localidad (models.Model):
+    descripcion = models.CharField(max_length=80)
+    provincia = models.ForeignKey(Provincia, null=True, on_delete=models.SET_NULL)
 
 class Usuario (models.Model):
     email = models.EmailField(max_length=30, unique=True)
@@ -51,19 +57,19 @@ class Cliente (models.Model):
     nombre = models.CharField(max_length=15)
     apellido = models.CharField(max_length=15)
     telefono = models.CharField(max_length=15)
-    domicilio = models.CharField(max_length=50)
-    localidad = models.CharField(max_length=30)
-    provincia = models.CharField(max_length=30)
+    domicilio = models.CharField(max_length=60)
+    localidad = models.CharField(max_length=80)
+    provincia = models.CharField(max_length=60)
     codigo_postal = models.CharField(max_length=15)
     usuario = models.ForeignKey(Usuario, null=True, on_delete=models.SET_NULL)
-    activo = models.IntegerField()
+    activo = models.IntegerField() # 0: Inactivo 1: Activo
 
 class Empleado (models.Model):
     nombre = models.CharField(max_length=15)
     apellido = models.CharField(max_length=15)
     rol = models.CharField(max_length=15)
     usuario = models.ForeignKey(Usuario, null=True, on_delete=models.SET_NULL)
-    activo = models.IntegerField()
+    activo = models.IntegerField() # 0: Inactivo 1: Activo
 
 class Estado (models.Model):
     tipo_estado = models.CharField(max_length=10)
@@ -84,5 +90,18 @@ class Pedido_Producto(models.Model):
     sub_total = models.DecimalField(max_digits=10, decimal_places=2)
     total = models.DecimalField(max_digits=10, decimal_places=2)
 
+class Factura(models.Model):
+    pedido = models.ForeignKey(Pedido, null=True, on_delete=models.SET_NULL)
+    fecha_emision = models.DateField(auto_now_add=True)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    estado_pago = models.CharField(max_length=20, default='Pendiente')  # Posibles valores: Pendiente, Pagado, Cancelado
+    metodo_pago = models.CharField(max_length=50)  # Ejemplos: Transferencia bancaria, MercadoPago, Efectivo
+    observaciones = models.TextField(blank=True, max_length=200)  # Notas adicionales sobre la factura
 
-
+class Detalle_Envio(models.Model):
+    pedido = models.ForeignKey(Pedido, null=True, on_delete=models.SET_NULL)
+    domicilio = models.CharField(max_length=60)
+    localidad = models.CharField(max_length=80)
+    provincia = models.CharField(max_length=60)
+    fecha_creacion = models.DateField(auto_now_add=True)
+    observaciones = models.TextField(blank=True, max_length=200)  # Notas adicionales sobre el Detalle de Envio
