@@ -2,17 +2,22 @@ from rest_framework import serializers
 
 from django.contrib.auth.hashers import make_password  # Importa make_password
 
-from app_django.models import Categoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, Estado, Pedido, Pedido_Producto, Factura, Detalle_Envio
+from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, Estado, Pedido, Pedido_Producto, Factura, Detalle_Envio
 
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Categoria
         fields = ('id','nombre','descripcion','activo')
 
+class SubcategoriaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subcategoria
+        fields = ('id','nombre','descripcion', 'categoria','activo')
+
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
-        fields = ('id','nombre','descripcion','talle','color','categoria','precio','cantidad','cantidad_disponible','cantidad_limite','imagen','observaciones','activo')
+        fields = ('id','nombre','descripcion','talle','color','categoria', 'subcategoria','precio','cantidad','cantidad_disponible','cantidad_limite','imagen','observaciones','activo')
 
 class ProvinciaSerializer(serializers.ModelSerializer):
     class Meta:

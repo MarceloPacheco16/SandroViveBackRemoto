@@ -6,6 +6,8 @@ from .views import get_public_key
 urlpatterns = [
     re_path(r'^categoria$', views.CategoriaList.as_view()),
     re_path(r'^categoria/(?P<pk>[0-9]+)$', views.CategoriaDetail.as_view()),
+    re_path(r'^subcategoria$', views.SubcategoriaList.as_view()),
+    re_path(r'^subcategoria/(?P<pk>[0-9]+)$', views.SubcategoriaDetail.as_view()),
     re_path(r'^producto$', views.ProductoList.as_view()),
     re_path(r'^producto/(?P<pk>[0-9]+)$', views.ProductoDetail.as_view()),
     re_path(r'^provincia$', views.ProvinciaList.as_view()),
@@ -32,4 +34,9 @@ urlpatterns = [
     # path('login/', login),
     path('verificar-credenciales/', views.verificar_credenciales),
     path('localidad/provincia/<int:provincia_id>/', views.localidades_por_provincia),
+    path('categorias/activas/', views.categorias_activas),
+    path('categorias/<int:categoria_id>/subcategorias/activas/', views.subcategorias_activas_por_categoria),
+    path('productos/categoria/<int:categoria_id>/', views.productos_por_categoria),
+    path('productos/subcategoria/<int:subcategoria_id>/', views.productos_por_subcategoria),
+    path('productos/activos/', views.productos_activos),
 ]

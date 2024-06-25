@@ -7,11 +7,12 @@ from django.contrib.auth.hashers import check_password
 
 from rest_framework import generics, status
 # from rest_framework.views import APIView
-# from rest_framework.response import Response
+from rest_framework.response import Response
 
-from django.shortcuts import get_list_or_404
+from django.shortcuts import get_list_or_404, get_object_or_404
 # from django.contrib.auth.hashers import check_password
 
+from rest_framework.decorators import api_view
 from django.views.decorators.csrf import csrf_exempt
 # from cryptography.hazmat.primitives import serialization
 # from cryptography.hazmat.primitives.asymmetric import padding
@@ -24,10 +25,10 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 import base64
 
-from app_django.models import Categoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, Estado, Pedido, Pedido_Producto, Factura, Detalle_Envio
+from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, Estado, Pedido, Pedido_Producto, Factura, Detalle_Envio
 
-from app_django.serializers import CategoriaSerializer, ProductoSerializer, ProvinciaSerializer, LocalidadSerializer, UsuarioSerializer, ClienteSerializer, EmpleadoSerializer
-from app_django.serializers import EstadoSerializer, PedidoSerializer, Pedido_ProductoSerializer, FacturaSerializer, Detalle_EnvioSerializer
+from app_django.serializers import CategoriaSerializer, SubcategoriaSerializer, ProductoSerializer, ProvinciaSerializer, LocalidadSerializer, UsuarioSerializer
+from app_django.serializers import ClienteSerializer, EmpleadoSerializer, EstadoSerializer, PedidoSerializer, Pedido_ProductoSerializer, FacturaSerializer, Detalle_EnvioSerializer
 # Create your views here.
 
 class CategoriaList(generics.ListCreateAPIView):
@@ -37,6 +38,14 @@ class CategoriaList(generics.ListCreateAPIView):
 class CategoriaDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
+
+class SubcategoriaList(generics.ListCreateAPIView):
+    queryset = Subcategoria.objects.all()
+    serializer_class = SubcategoriaSerializer
+
+class SubcategoriaDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Subcategoria.objects.all()
+    serializer_class = SubcategoriaSerializer
 
 class ProductoList(generics.ListCreateAPIView):
     queryset = Producto.objects.all()
@@ -239,3 +248,53 @@ def localidades_por_provincia(request, provincia_id):
     localidades = get_list_or_404(Localidad, provincia_id=provincia_id)
     localidades_data = [{'id': loc.id, 'descripcion': loc.descripcion} for loc in localidades]
     return JsonResponse(localidades_data, safe=False)
+
+# Función de vista para obtener categorías activas
+def categorias_activas(request):
+    categorias = Categoria.objects.filter(activo=True)
+    serializer = CategoriaSerializer(categorias, many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+# Función de vista para obtener subcategorías activas por categoría
+def subcategorias_activas_por_categoria(request, categoria_id):
+    categoria = get_object_or_404(Categoria, pk=categoria_id)
+    subcategorias = Subcategoria.objects.filter(categoria=categoria, activo=True)
+    serializer = SubcategoriaSerializer(subcategorias, many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+# def productos_por_categoria(request, categoria_id):
+#     productos = Producto.objects.filter(categoria_id=categoria_id, activo=1)
+#     data = list(productos.values())
+#     return JsonResponse(data, safe=False)
+
+# def productos_por_subcategoria(request, subcategoria_id):
+#     productos = Producto.objects.filter(subcategoria_id=subcategoria_id, activo=1)
+#     data = list(productos.values())
+#     return JsonResponse(data, safe=False)
+
+# Función de vista para obtener los Productos segun la Categoría seleccionada
+@api_view(['GET'])
+def productos_por_categoria(request, categoria_id):
+    try:
+        categoria = get_object_or_404(Categoria, pk=categoria_id)
+        productos = Producto.objects.filter(categoria=categoria, activo = 1)
+        serializer = ProductoSerializer(productos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Categoria.DoesNotExist:
+        return Response({'error': 'Categoria no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+
+# Función de vista para obtener los Productos segun la Subcategoría seleccionada
+@api_view(['GET'])
+def productos_por_subcategoria(request, subcategoria_id):
+    try:
+        subcategoria = get_object_or_404(Subcategoria, pk=subcategoria_id)
+        productos = Producto.objects.filter(subcategoria=subcategoria, activo = 1)
+        serializer = ProductoSerializer(productos, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Subcategoria.DoesNotExist:
+        return Response({'error': 'Subcategoria no encontrada'}, status=status.HTTP_404_NOT_FOUND)
+    
+def productos_activos(request):
+    productos = Producto.objects.filter(activo=1)
+    data = list(productos.values())
+    return JsonResponse(data, safe=False)

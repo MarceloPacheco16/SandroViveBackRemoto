@@ -4,16 +4,23 @@ from django.contrib.auth.hashers import make_password, check_password  # Importa
 # Create your models here.
 
 class Categoria (models.Model):
-    nombre = models.CharField(max_length=15)
-    descripcion = models.CharField(max_length=30)
+    nombre = models.CharField(max_length=30)
+    descripcion = models.CharField(max_length=150)
+    activo = models.IntegerField() # 0: Inactivo 1: Activo
+    
+class Subcategoria (models.Model):
+    nombre = models.CharField(max_length=30)
+    descripcion = models.CharField(max_length=150)
+    categoria = models.ForeignKey(Categoria, null=True, on_delete=models.SET_NULL)
     activo = models.IntegerField() # 0: Inactivo 1: Activo
 
 class Producto (models.Model):
-    nombre = models.CharField(max_length=15)
-    descripcion = models.CharField(max_length=30)
+    nombre = models.CharField(max_length=60)
+    descripcion = models.CharField(max_length=250)
     talle = models.CharField(max_length=10)
     color = models.CharField(max_length=15)
     categoria = models.ForeignKey(Categoria, null=True, on_delete=models.SET_NULL)
+    subcategoria = models.ForeignKey(Subcategoria, null=True, on_delete=models.SET_NULL)
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     cantidad = models.IntegerField()
     cantidad_disponible = models.IntegerField()
