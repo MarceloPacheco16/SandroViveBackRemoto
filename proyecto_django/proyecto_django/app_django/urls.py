@@ -34,9 +34,12 @@ urlpatterns = [
     # path('login/', login),
     path('verificar-credenciales/', views.verificar_credenciales),
     path('localidad/provincia/<int:provincia_id>/', views.localidades_por_provincia),
+
+    path('buscar_productos/', views.buscar_productos, name='buscar_productos'),
     path('categorias/activas/', views.categorias_activas),
     path('categorias/<int:categoria_id>/subcategorias/activas/', views.subcategorias_activas_por_categoria),
     path('productos/categoria/<int:categoria_id>/', views.productos_por_categoria),
     path('productos/subcategoria/<int:subcategoria_id>/', views.productos_por_subcategoria),
     path('productos/activos/', views.productos_activos),
+    path('filtrar_productos/', views.filtrar_productos),
 ]

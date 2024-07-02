@@ -25,6 +25,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 import base64
 
+from django.db.models import Q
+
 from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, Estado, Pedido, Pedido_Producto, Factura, Detalle_Envio
 
 from app_django.serializers import CategoriaSerializer, SubcategoriaSerializer, ProductoSerializer, ProvinciaSerializer, LocalidadSerializer, UsuarioSerializer
@@ -249,6 +251,40 @@ def localidades_por_provincia(request, provincia_id):
     localidades_data = [{'id': loc.id, 'descripcion': loc.descripcion} for loc in localidades]
     return JsonResponse(localidades_data, safe=False)
 
+# Función de vista para obtener productos activos por nombre o descripcion
+@api_view(['GET'])
+def buscar_productos(request):
+    termino = request.GET.get('busqueda', '')
+    productos = Producto.objects.filter(
+        Q(nombre__icontains=termino) | Q(descripcion__icontains=termino),
+        activo=1
+    )
+    serializer = ProductoSerializer(productos, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+# def buscar_productos(request):
+#     query = request.GET.get('busqueda', '')
+#     productos = Producto.objects.filter(
+#         Q(nombre__icontains=termino) | Q(descripcion__icontains=termino),
+#         activo=1
+#     )
+#     resultados = [
+#         {
+#             'id': producto.id,
+#             'nombre': producto.nombre,
+#             'descripcion': producto.descripcion,
+#             'talle': producto.talle,
+#             'color': producto.color,
+#             'precio': producto.precio,
+#             'cantidad': producto.cantidad,
+#             'cantidad_disponible': producto.cantidad_disponible,
+#             'cantidad_limite': producto.cantidad_limite,
+#             'imagen': producto.imagen.url if producto.imagen else None,
+#             'observaciones': producto.observaciones,
+#         }
+#     for producto in productos]
+    
+#     return JsonResponse(resultados, safe=False)
+
 # Función de vista para obtener categorías activas
 def categorias_activas(request):
     categorias = Categoria.objects.filter(activo=True)
@@ -293,8 +329,54 @@ def productos_por_subcategoria(request, subcategoria_id):
         return Response(serializer.data, status=status.HTTP_200_OK)
     except Subcategoria.DoesNotExist:
         return Response({'error': 'Subcategoria no encontrada'}, status=status.HTTP_404_NOT_FOUND)
-    
+
+# Función de vista para obtener productos activos
 def productos_activos(request):
     productos = Producto.objects.filter(activo=1)
     data = list(productos.values())
     return JsonResponse(data, safe=False)
+
+# Función de vista para obtener productos activos segun estos distintos tipos de filtros
+def filtrar_productos(request):
+    nombre = request.GET.get('nombre', '')
+    descripcion = request.GET.get('descripcion', '')
+    categoria_id = request.GET.get('categoria', '')
+    subcategoria_id = request.GET.get('subcategoria', '')
+    precio_desde = request.GET.get('precio_desde', '')
+    precio_hasta = request.GET.get('precio_hasta', '')
+    color = request.GET.get('color', '')
+    talle = request.GET.get('talle', '')
+
+    # Filtramos para que esten solo los Productos Activos
+    productos = Producto.objects.filter(activo=1)
+
+    # Construyendo la consulta de filtro
+    # Filtro de nombre
+    if nombre:
+        productos = productos.filter(nombre__icontains=nombre)
+    # Filtro de descripcion
+    if descripcion:
+        productos = productos.filter(descripcion__icontains=descripcion)
+    # Filtro de categoria
+    if categoria_id:
+        productos = productos.filter(categoria_id=categoria_id)
+    # Filtro de subcategoria
+    if subcategoria_id:
+        productos = productos.filter(subcategoria_id=subcategoria_id)
+    # Filtro de precio desde (mayor o igual a)
+    if precio_desde:
+        productos = productos.filter(precio__gte=precio_desde)
+    # Filtro de precio hasta (menor o igual a)
+    if precio_hasta:
+        productos = productos.filter(precio__lte=precio_hasta)
+    # Filtro de color
+    if color:
+        productos = productos.filter(color=color)
+    # Filtro de talle
+    if talle:
+        productos = productos.filter(talle=talle)
+
+    # Serializar los productos a formato JSON
+    productos_json = list(productos.values())
+    # Retornar los productos en formato JSON
+    return JsonResponse(productos_json, safe=False)

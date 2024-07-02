@@ -17,7 +17,7 @@ class Subcategoria (models.Model):
 class Producto (models.Model):
     nombre = models.CharField(max_length=60)
     descripcion = models.CharField(max_length=250)
-    talle = models.CharField(max_length=10)
+    talle = models.CharField(max_length=10, blank=True)
     color = models.CharField(max_length=15)
     categoria = models.ForeignKey(Categoria, null=True, on_delete=models.SET_NULL)
     subcategoria = models.ForeignKey(Subcategoria, null=True, on_delete=models.SET_NULL)
@@ -102,7 +102,7 @@ class Factura(models.Model):
     fecha_emision = models.DateField(auto_now_add=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     estado_pago = models.CharField(max_length=20, default='Pendiente')  # Posibles valores: Pendiente, Pagado, Cancelado
-    metodo_pago = models.CharField(max_length=50)  # Ejemplos: Transferencia bancaria, MercadoPago, Efectivo
+    metodo_pago = models.CharField(max_length=50)  # Ejemplos: MercadoPago, Efectivo
     observaciones = models.TextField(blank=True, max_length=200)  # Notas adicionales sobre la factura
 
 class Detalle_Envio(models.Model):
