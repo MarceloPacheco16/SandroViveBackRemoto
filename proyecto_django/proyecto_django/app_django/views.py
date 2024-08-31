@@ -26,6 +26,7 @@ from Crypto.Cipher import PKCS1_OAEP
 import base64
 
 from django.db.models import Q
+from django.forms import model_to_dict
 
 from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, Estado, Pedido, Pedido_Producto, Factura, Detalle_Envio
 
@@ -380,3 +381,28 @@ def filtrar_productos(request):
     productos_json = list(productos.values())
     # Retornar los productos en formato JSON
     return JsonResponse(productos_json, safe=False)
+
+# Función de vista para obtener un producto activo por ID
+def productos_activos_por_id(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id, activo=1)
+
+    # Producto MODIFICADO
+    producto_data = {
+        'id': producto.id,
+        'nombre': producto.nombre,
+        'descripcion': producto.descripcion,
+        'talle': producto.talle,
+        'color': producto.color,
+        # 'categoria': producto.categoria.nombre if producto.categoria else None, #Pasar el Nombre de la Categoria en vez del numero
+        'categoria': producto.categoria.id,
+        # 'subcategoria': producto.subcategoria.nombre if producto.subcategoria else None, #Pasar el Nombre de la Subcategoria en vez del numero
+        'subcategoria': producto.subcategoria.id,
+        'precio': producto.precio,
+        'cantidad': producto.cantidad,
+        'cantidad_disponible': producto.cantidad_disponible,
+        'cantidad_limite': producto.cantidad_limite,
+        'imagen': producto.imagen.url if producto.imagen else None,  # Accede a la URL de la imagen
+        'observaciones': producto.observaciones,
+        'activo': producto.activo
+    }
+    return JsonResponse(producto_data)

@@ -42,4 +42,6 @@ urlpatterns = [
     path('productos/subcategoria/<int:subcategoria_id>/', views.productos_por_subcategoria),
     path('productos/activos/', views.productos_activos),
     path('filtrar_productos/', views.filtrar_productos),
+    path('productos/activos/<int:producto_id>/', views.productos_activos_por_id),
+    
 ]
