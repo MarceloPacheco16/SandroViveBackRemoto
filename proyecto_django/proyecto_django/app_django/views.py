@@ -312,7 +312,7 @@ def subcategorias_activas_por_categoria(request, categoria_id):
 # Función de vista para obtener los Productos segun la Categoría seleccionada
 @api_view(['GET'])
 def productos_por_categoria(request, categoria_id):
-    try:
+    try: 
         categoria = get_object_or_404(Categoria, pk=categoria_id)
         productos = Producto.objects.filter(categoria=categoria, activo = 1)
         serializer = ProductoSerializer(productos, many=True)
@@ -382,6 +382,13 @@ def filtrar_productos(request):
     # Retornar los productos en formato JSON
     return JsonResponse(productos_json, safe=False)
 
+# Función de vista para obtener productos activos
+# def productos_activos(request, producto_id):
+#     producto = Producto.objects.filter(activo=1, id=producto_id)
+#     productos = productos.filter(id=producto_id)
+#     data = list(productos.values())
+#     return JsonResponse(data, safe=False)
+
 # Función de vista para obtener un producto activo por ID
 def productos_activos_por_id(request, producto_id):
     producto = get_object_or_404(Producto, id=producto_id, activo=1)
@@ -396,7 +403,8 @@ def productos_activos_por_id(request, producto_id):
         # 'categoria': producto.categoria.nombre if producto.categoria else None, #Pasar el Nombre de la Categoria en vez del numero
         'categoria': producto.categoria.id,
         # 'subcategoria': producto.subcategoria.nombre if producto.subcategoria else None, #Pasar el Nombre de la Subcategoria en vez del numero
-        'subcategoria': producto.subcategoria.id,
+        'subcategoria': producto.subcategoria.id if producto.subcategoria else None, #Pasar el Nombre de la Subcategoria en vez del numero
+        # 'subcategoria': producto.subcategoria.id,
         'precio': producto.precio,
         'cantidad': producto.cantidad,
         'cantidad_disponible': producto.cantidad_disponible,
@@ -406,3 +414,16 @@ def productos_activos_por_id(request, producto_id):
         'activo': producto.activo
     }
     return JsonResponse(producto_data)
+
+# Función de vista para obtener un producto activo por ID
+def usuarios_sin_contraseña():
+    usuario = get_object_or_404(Usuario)
+
+    # Producto MODIFICADO
+    usuario_data = {
+        'email': usuario.id,
+        # 'contrasenia': usuario.contrasenia,
+        'cant_intentos': usuario.cant_intentos,
+        'activo': usuario.activo
+    }
+    return JsonResponse(usuario_data)

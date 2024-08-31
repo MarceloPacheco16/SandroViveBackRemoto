@@ -2,6 +2,8 @@ from django.urls import path, re_path
 from . import views
 from .views import get_public_key
 # from .views import login
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     re_path(r'^categoria$', views.CategoriaList.as_view()),
@@ -42,6 +44,8 @@ urlpatterns = [
     path('productos/subcategoria/<int:subcategoria_id>/', views.productos_por_subcategoria),
     path('productos/activos/', views.productos_activos),
     path('filtrar_productos/', views.filtrar_productos),
-    path('productos/activos/<int:producto_id>/', views.productos_activos_por_id),
-    
+    path('productos/activos/<int:producto_id>/', views.productos_activos_por_id),    
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
