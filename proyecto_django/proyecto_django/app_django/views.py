@@ -427,3 +427,4 @@ def usuarios_sin_contraseña():
         'activo': usuario.activo
     }
     return JsonResponse(usuario_data)
+
