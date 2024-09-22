@@ -9,6 +9,8 @@ from rest_framework import generics, status
 # from rest_framework.views import APIView
 from rest_framework.response import Response
 
+from rest_framework.parsers import MultiPartParser, FormParser
+
 from django.shortcuts import get_list_or_404, get_object_or_404
 # from django.contrib.auth.hashers import check_password
 
@@ -53,10 +55,12 @@ class SubcategoriaDetail(generics.RetrieveUpdateDestroyAPIView):
 class ProductoList(generics.ListCreateAPIView):
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
+    parser_classes = (MultiPartParser, FormParser)  # Añade estos parsers para manejar archivos
 
 class ProductoDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
+    parser_classes = (MultiPartParser, FormParser)  # Añade estos parsers para manejar archivos
     
 class ProvinciaList(generics.ListCreateAPIView):
     queryset = Provincia.objects.all()
@@ -415,16 +419,140 @@ def productos_activos_por_id(request, producto_id):
     }
     return JsonResponse(producto_data)
 
+# # Función de vista para obtener un producto activo por ID
+# def usuarios_sin_contraseña():
+#     usuario = get_object_or_404(Usuario)
+
+#     # Producto MODIFICADO
+#     usuario_data = {
+#         'email': usuario.id,
+#         # 'contrasenia': usuario.contrasenia,
+#         'cant_intentos': usuario.cant_intentos,
+#         'activo': usuario.activo
+#     }
+#     return JsonResponse(usuario_data)
+
+
 # Función de vista para obtener un producto activo por ID
-def usuarios_sin_contraseña():
-    usuario = get_object_or_404(Usuario)
+@api_view(['POST'])
+def cargar_carrito_de_cliente(request, cliente_id):    
+    # Verificar si el cliente ya tiene un pedido activo (estado = "carrito")
+    try:
+        elPedido = Pedido.objects.get(cliente=cliente_id, estado__tipo_estado="carrito")
+    except Pedido.DoesNotExist:
+        # Crear pedido si no existe
+        elCliente = Cliente.objects.get(id=cliente_id)
+        estado_carrito = Estado.objects.get(tipo_estado="carrito")  # Buscar estado "carrito"
 
-    # Producto MODIFICADO
-    usuario_data = {
-        'email': usuario.id,
-        # 'contrasenia': usuario.contrasenia,
-        'cant_intentos': usuario.cant_intentos,
-        'activo': usuario.activo
-    }
-    return JsonResponse(usuario_data)
+        elPedido = Pedido.objects.create(
+            cliente= elCliente,
+            estado= estado_carrito, # Asignar el estado como instanci
+            fecha_pactada= None,  # O asigna un valor por defecto
+            fecha_entregada= None,  # O asigna un valor por defecto
+            total= 0.00  # El total comenzará en 0
+        )
 
+    # Obtener producto y cantidad desde el request
+    producto_id = request.data.get('producto_id')
+    cantidad = request.data.get('cantidad')
+    elProducto = Producto.objects.get(id=producto_id)
+
+    # Crear o actualizar Pedido_Producto
+    sub_total = elProducto.precio * int(cantidad)
+    pedido_producto, created = Pedido_Producto.objects.get_or_create(
+        pedido= elPedido,
+        producto= elProducto,
+        defaults={
+            'cantidad': cantidad,
+            'sub_total': sub_total
+        }
+    )
+
+    if not created:
+        # Si ya existía la relación entre pedido y producto, actualizar cantidad y totales
+        pedido_producto.cantidad += int(cantidad)
+        pedido_producto.sub_total = elProducto.precio * pedido_producto.cantidad
+        pedido_producto.save()
+    
+    # Actualizar el total del pedido sumando el total de todos los productos en el pedido
+    total_pedido = sum(p.sub_total for p in Pedido_Producto.objects.filter(pedido=elPedido))
+    elPedido.total = total_pedido
+    elPedido.save()
+
+    return Response(PedidoSerializer(elPedido).data, status=status.HTTP_200_OK)
+
+# def pedido_carrito_por_cliente(request, cliente_id):
+#     pedido = get_object_or_404(Pedido, cliente=cliente_id, estado=1)
+
+#     # Producto MODIFICADO
+#     pedido_data = {
+#         'id': pedido.id,
+#         'cliente': pedido.cliente,
+#         'fecha_creacion': pedido.fecha_creacion,
+#         'fecha_pactada': pedido.fecha_pactada,
+#         'fecha_entregada': pedido.fecha_entregada,
+#         'estado': pedido.estado,
+#         'total': pedido.total,
+#         'observaciones': pedido.observaciones
+#     }
+#     return JsonResponse(pedido_data)
+    
+#     # Verificar si el cliente ya tiene un pedido activo (con estado 0)
+#     # cliente = models.ForeignKey(Cliente, null=True, on_delete=models.SET_NULL)
+#     # fecha_creacion = models.DateField(auto_now=True)
+#     # fecha_pactada = models.DateField()
+#     # fecha_entregada = models.DateField()
+#     # estado = models.ForeignKey(Estado, null=True, on_delete=models.SET_NULL)
+#     # total = models.DecimalField(max_digits=10, decimal_places=2)
+#     # observaciones = models.TextField(blank=True, max_length=200)
+
+@api_view(['GET'])
+def pedido_carrito_por_cliente(request, cliente_id):
+    try:
+        pedido = Pedido.objects.get(cliente=cliente_id, estado__tipo_estado="carrito")
+    except Pedido.DoesNotExist:
+        return Response({"error": "Pedido no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = PedidoSerializer(pedido)
+    return Response(serializer.data)
+
+# Función de vista para obtener productos activos
+def productos_por_pedido(request, pedido_id):
+    pedido_productos = Pedido_Producto.objects.filter(pedido=pedido_id)
+    data = list(pedido_productos.values())
+    return JsonResponse(data, safe=False)
+
+@api_view(['GET'])
+def productos_carrito(request, cliente_id):
+    try:
+        estado_carrito = Estado.objects.get(tipo_estado='carrito')
+        pedido = Pedido.objects.filter(cliente_id=cliente_id, estado=estado_carrito).first()
+        
+        if not pedido:
+            return Response({"detail": "No hay productos en el carrito."}, status=404)
+
+        productos_carrito = Pedido_Producto.objects.filter(pedido=pedido)
+        serializer = Pedido_ProductoSerializer(productos_carrito, many=True)
+        return Response(serializer.data, status=200)
+    except Estado.DoesNotExist:
+        return Response({"detail": "Estado 'carrito' no encontrado."}, status=400)
+
+@api_view(['POST'])
+def verificar_contrasenia_actual(request, usuario_id):
+    try:
+        usuario = Usuario.objects.get(pk=usuario_id)
+        contrasenia_actual = request.data.get('contrasenia', '')
+        
+        print("Contraseña Actual:", contrasenia_actual)
+
+        # Solo verifica la contraseña actual si se proporciona
+        if contrasenia_actual and check_password(contrasenia_actual, usuario.contrasenia):
+            return Response({'valida': True}, status=status.HTTP_200_OK) # La contraseña proporciona coincide con la contraseña actual
+        elif contrasenia_actual:
+            # return Response({'valida': False}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'valida': False}) # La contraseña proporciona NO coincide con la contraseña actual
+        else:
+            # return Response({'valida': True}, status=status.HTTP_200_OK)  # No se requiere verificación si no se proporciona contraseña actual
+            return Response({'valida': True})  # No se requiere verificación porque no se proporciono la contraseña actual
+    except Usuario.DoesNotExist:
+        return Response({'detail': 'Usuario no encontrado.'}, status=status.HTTP_404_NOT_FOUND)

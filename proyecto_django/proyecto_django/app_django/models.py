@@ -61,8 +61,8 @@ class Usuario (models.Model):
     #     super().save(*args, **kwargs)
 
 class Cliente (models.Model):
-    nombre = models.CharField(max_length=15)
-    apellido = models.CharField(max_length=15)
+    nombre = models.CharField(max_length=40)
+    apellido = models.CharField(max_length=40)
     telefono = models.CharField(max_length=15)
     domicilio = models.CharField(max_length=60)
     localidad = models.CharField(max_length=80)
@@ -72,8 +72,8 @@ class Cliente (models.Model):
     activo = models.IntegerField() # 0: Inactivo 1: Activo
 
 class Empleado (models.Model):
-    nombre = models.CharField(max_length=15)
-    apellido = models.CharField(max_length=15)
+    nombre = models.CharField(max_length=40)
+    apellido = models.CharField(max_length=40)
     rol = models.CharField(max_length=15)
     usuario = models.ForeignKey(Usuario, null=True, on_delete=models.SET_NULL)
     activo = models.IntegerField() # 0: Inactivo 1: Activo
@@ -84,8 +84,8 @@ class Estado (models.Model):
 class Pedido (models.Model):
     cliente = models.ForeignKey(Cliente, null=True, on_delete=models.SET_NULL)
     fecha_creacion = models.DateField(auto_now=True)
-    fecha_pactada = models.DateField()
-    fecha_entregada = models.DateField()
+    fecha_pactada = models.DateField(null=True, blank=True)  # Permitir null y que sea opcional
+    fecha_entregada = models.DateField(null=True, blank=True)  # Permitir null y que sea opcional
     estado = models.ForeignKey(Estado, null=True, on_delete=models.SET_NULL)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     observaciones = models.TextField(blank=True, max_length=200)
@@ -95,9 +95,10 @@ class Pedido_Producto(models.Model):
     producto = models.ForeignKey(Producto, null=True, on_delete=models.SET_NULL)
     cantidad = models.IntegerField()
     sub_total = models.DecimalField(max_digits=10, decimal_places=2)
-    total = models.DecimalField(max_digits=10, decimal_places=2)
+    # total = models.DecimalField(max_digits=10, decimal_places=2)
 
 class Factura(models.Model):
+
     pedido = models.ForeignKey(Pedido, null=True, on_delete=models.SET_NULL)
     fecha_emision = models.DateField(auto_now_add=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)

@@ -44,10 +44,13 @@ urlpatterns = [
     path('productos/subcategoria/<int:subcategoria_id>/', views.productos_por_subcategoria),
     path('productos/activos/', views.productos_activos),
     path('filtrar_productos/', views.filtrar_productos),
-    path('productos/activos/<int:producto_id>/', views.productos_activos_por_id),    
+    path('productos/activos/<int:producto_id>/', views.productos_activos_por_id),   
+    path('pedido/cliente/<int:cliente_id>/', views.cargar_carrito_de_cliente),
+    path('pedido/cliente/<int:cliente_id>/detalle/', views.pedido_carrito_por_cliente),
+    path('pedido/cliente/<int:pedido_id>/productos/', views.productos_por_pedido),
+    path('usuario/<int:usuario_id>/verificar-contrasenia/', views.verificar_contrasenia_actual),
+    path('cliente/<int:cliente_id>/pedido-carrito/', views.productos_carrito, name='productos_carrito'),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-    
