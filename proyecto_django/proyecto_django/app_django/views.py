@@ -30,10 +30,11 @@ import base64
 from django.db.models import Q
 from django.forms import model_to_dict
 
-from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, Estado, Pedido, Pedido_Producto, Factura, Detalle_Envio
+from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, Estado, Pedido, Pedido_Producto, Factura, Detalle_Envio, Talle
 
 from app_django.serializers import CategoriaSerializer, SubcategoriaSerializer, ProductoSerializer, ProvinciaSerializer, LocalidadSerializer, UsuarioSerializer
 from app_django.serializers import ClienteSerializer, EmpleadoSerializer, EstadoSerializer, PedidoSerializer, Pedido_ProductoSerializer, FacturaSerializer, Detalle_EnvioSerializer
+from app_django.serializers import TalleSerializer
 # Create your views here.
 
 class CategoriaList(generics.ListCreateAPIView):
@@ -141,6 +142,14 @@ class Detalle_EnvioList(generics.ListCreateAPIView):
 class Detalle_EnvioDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Detalle_Envio.objects.all()
     serializer_class = Detalle_EnvioSerializer
+
+class TalleList(generics.ListCreateAPIView):
+    queryset = Talle.objects.all()
+    serializer_class = TalleSerializer
+
+class TalleDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Talle.objects.all()
+    serializer_class = TalleSerializer
 
 # Archivos de clave pública y privada
 PUBLIC_KEY_FILE = "public_key.pem"

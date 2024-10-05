@@ -113,3 +113,8 @@ class Detalle_Envio(models.Model):
     provincia = models.CharField(max_length=60)
     fecha_creacion = models.DateField(auto_now_add=True)
     observaciones = models.TextField(blank=True, max_length=200)  # Notas adicionales sobre el Detalle de Envio
+
+class Talle(models.Model):
+    nombre = models.CharField(max_length=10)
+    descripcion = models.CharField(max_length=50)
+    activo = models.IntegerField() # 0: Inactivo 1: Activo

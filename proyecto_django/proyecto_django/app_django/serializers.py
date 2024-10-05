@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from django.contrib.auth.hashers import make_password  # Importa make_password
 
-from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, Estado, Pedido, Pedido_Producto, Factura, Detalle_Envio
+from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, Estado, Pedido, Pedido_Producto, Factura, Detalle_Envio, Talle
 
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -93,6 +93,7 @@ class PedidoSerializer(serializers.ModelSerializer):
 #         model = Pedido_Producto
 #         fields = ('id','pedido','producto','cantidad','sub_total')
 class Pedido_ProductoSerializer(serializers.ModelSerializer):
+    producto_id = serializers.IntegerField(source='producto.id', read_only=True)
     producto_nombre = serializers.CharField(source='producto.nombre', read_only=True)
     producto_precio = serializers.DecimalField(source='producto.precio', max_digits=10, decimal_places=2, read_only=True)
     producto_imagen = serializers.ImageField(source='producto.imagen', read_only=True)
@@ -100,7 +101,7 @@ class Pedido_ProductoSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Pedido_Producto
-        fields = ('id', 'pedido_id', 'producto_nombre', 'producto_precio', 'producto_imagen', 'cantidad', 'sub_total')
+        fields = ('id', 'pedido_id', 'producto_id', 'producto_nombre', 'producto_precio', 'producto_imagen', 'cantidad', 'sub_total')
 
 class FacturaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -112,3 +113,8 @@ class Detalle_EnvioSerializer(serializers.ModelSerializer):
         model = Detalle_Envio
         fields = ('id','pedido','domicilio','localidad','provincia', 'fecha_creacion', 'observaciones')
 
+
+class TalleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Talle
+        fields = ('id','nombre','descripcion','activo')

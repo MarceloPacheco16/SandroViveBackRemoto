@@ -32,6 +32,8 @@ urlpatterns = [
     re_path(r'^factura/(?P<pk>[0-9]+)$', views.FacturaDetail.as_view()),
     re_path(r'^detalle_envio$', views.Detalle_EnvioList.as_view()),
     re_path(r'^detalle_envio/(?P<pk>[0-9]+)$', views.Detalle_EnvioDetail.as_view()),
+    re_path(r'^talle$', views.TalleList.as_view()),
+    re_path(r'^talle/(?P<pk>[0-9]+)$', views.TalleDetail.as_view()),
     path('get-public-key/', get_public_key),
     # path('login/', login),
     path('verificar-credenciales/', views.verificar_credenciales),
