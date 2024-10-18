@@ -1,9 +1,13 @@
+# from email.message import EmailMessage
+from django.db import connection
 from django.shortcuts import render
 
 from django.views.decorators.csrf import csrf_exempt
 
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth.hashers import check_password
+
+from django.core.mail import EmailMessage
 
 from rest_framework import generics, status
 # from rest_framework.views import APIView
@@ -30,13 +34,14 @@ import base64
 from django.db.models import Q
 from django.forms import model_to_dict
 
-from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, Estado, Pedido, Pedido_Producto, Factura, Detalle_Envio, Talle
+from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, EstadoPedido, Pedido, Pedido_Producto, EstadoPago, MetodoPago
+from app_django.models import Factura, Detalle_Envio, Talle
 
 from app_django.serializers import CategoriaSerializer, SubcategoriaSerializer, ProductoSerializer, ProvinciaSerializer, LocalidadSerializer, UsuarioSerializer
-from app_django.serializers import ClienteSerializer, EmpleadoSerializer, EstadoSerializer, PedidoSerializer, Pedido_ProductoSerializer, FacturaSerializer, Detalle_EnvioSerializer
-from app_django.serializers import TalleSerializer
-# Create your views here.
+from app_django.serializers import ClienteSerializer, EmpleadoSerializer, EstadoPedidoSerializer, PedidoSerializer, Pedido_ProductoSerializer, EstadoPagoSerializer, MetodoPagoSerializer
+from app_django.serializers import FacturaSerializer, Detalle_EnvioSerializer, TalleSerializer
 
+# Create your views here.       
 class CategoriaList(generics.ListCreateAPIView):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
@@ -103,13 +108,13 @@ class EmpleadoDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Empleado.objects.all()
     serializer_class = EmpleadoSerializer
 
-class EstadoList(generics.ListCreateAPIView):
-    queryset = Estado.objects.all()
-    serializer_class = EstadoSerializer
+class EstadoPedidoList(generics.ListCreateAPIView):
+    queryset = EstadoPedido.objects.all()
+    serializer_class = EstadoPedidoSerializer
 
-class EstadoDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Estado.objects.all()
-    serializer_class = EstadoSerializer
+class EstadoPedidoDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = EstadoPedido.objects.all()
+    serializer_class = EstadoPedidoSerializer
         
 class PedidoList(generics.ListCreateAPIView):
     queryset = Pedido.objects.all()
@@ -126,6 +131,22 @@ class Pedido_ProductoList(generics.ListCreateAPIView):
 class Pedido_ProductoDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Pedido_Producto.objects.all()
     serializer_class = Pedido_ProductoSerializer
+
+class EstadoPagoList(generics.ListCreateAPIView):
+    queryset = EstadoPago.objects.all()
+    serializer_class = EstadoPagoSerializer
+
+class EstadoPagoDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = EstadoPago.objects.all()
+    serializer_class = EstadoPagoSerializer
+
+class MetodoPagoList(generics.ListCreateAPIView):
+    queryset = MetodoPago.objects.all()
+    serializer_class = MetodoPagoSerializer
+
+class MetodoPagoDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MetodoPago.objects.all()
+    serializer_class = MetodoPagoSerializer
 
 class FacturaList(generics.ListCreateAPIView):
     queryset = Factura.objects.all()
@@ -447,11 +468,11 @@ def productos_activos_por_id(request, producto_id):
 def cargar_carrito_de_cliente(request, cliente_id):    
     # Verificar si el cliente ya tiene un pedido activo (estado = "carrito")
     try:
-        elPedido = Pedido.objects.get(cliente=cliente_id, estado__tipo_estado="carrito")
+        elPedido = Pedido.objects.get(cliente=cliente_id, estado__estado="carrito")
     except Pedido.DoesNotExist:
         # Crear pedido si no existe
         elCliente = Cliente.objects.get(id=cliente_id)
-        estado_carrito = Estado.objects.get(tipo_estado="carrito")  # Buscar estado "carrito"
+        estado_carrito = EstadoPedido.objects.get(estado="carrito")  # Buscar estado "carrito"
 
         elPedido = Pedido.objects.create(
             cliente= elCliente,
@@ -518,7 +539,7 @@ def cargar_carrito_de_cliente(request, cliente_id):
 @api_view(['GET'])
 def pedido_carrito_por_cliente(request, cliente_id):
     try:
-        pedido = Pedido.objects.get(cliente=cliente_id, estado__tipo_estado="carrito")
+        pedido = Pedido.objects.get(cliente=cliente_id, estado__estado__iexact="carrito")
     except Pedido.DoesNotExist:
         return Response({"error": "Pedido no encontrado."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -532,19 +553,32 @@ def productos_por_pedido(request, pedido_id):
     return JsonResponse(data, safe=False)
 
 @api_view(['GET'])
-def productos_carrito(request, cliente_id):
+def pedido_productos_carrito_por_cliente(request, cliente_id):
+    estado_carrito = EstadoPedido.objects.get(estado='carrito')
+    # pedido = Pedido.objects.filter(cliente_id=cliente_id, estado=estado_carrito).first()
+    
     try:
-        estado_carrito = Estado.objects.get(tipo_estado='carrito')
         pedido = Pedido.objects.filter(cliente_id=cliente_id, estado=estado_carrito).first()
-        
-        if not pedido:
-            return Response({"detail": "No hay productos en el carrito."}, status=404)
+    except Pedido.DoesNotExist:
+        return Response({"error": "Pedido no encontrado."}, status=status.HTTP_404_NOT_FOUND)
+    # if not pedido:
+    #     return Response({"error": "No hay productos en el carrito."}, status=404)
 
-        productos_carrito = Pedido_Producto.objects.filter(pedido=pedido)
-        serializer = Pedido_ProductoSerializer(productos_carrito, many=True)
-        return Response(serializer.data, status=200)
-    except Estado.DoesNotExist:
-        return Response({"detail": "Estado 'carrito' no encontrado."}, status=400)
+    productos_carrito = Pedido_Producto.objects.filter(pedido=pedido)
+    serializer = Pedido_ProductoSerializer(productos_carrito, many=True)
+    return Response(serializer.data, status=200)
+    # try:
+    #     estado_carrito = EstadoPedido.objects.get(estado='carrito')
+    #     pedido = Pedido.objects.filter(cliente_id=cliente_id, estado=estado_carrito).first()
+        
+    #     if not pedido:
+    #         return Response({"detail": "No hay productos en el carrito."}, status=404)
+
+    #     productos_carrito = Pedido_Producto.objects.filter(pedido=pedido)
+    #     serializer = Pedido_ProductoSerializer(productos_carrito, many=True)
+    #     return Response(serializer.data, status=200)
+    # except EstadoPedido.DoesNotExist:
+    #     return Response({"detail": "Estado 'carrito' no encontrado."}, status=400)
 
 @api_view(['POST'])
 def verificar_contrasenia_actual(request, usuario_id):
@@ -565,3 +599,76 @@ def verificar_contrasenia_actual(request, usuario_id):
             return Response({'valida': True})  # No se requiere verificación porque no se proporciono la contraseña actual
     except Usuario.DoesNotExist:
         return Response({'detail': 'Usuario no encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['POST'])
+def contacto_enviar_email(request):
+    nombre = request.data.get('name')
+    email = request.data.get('email')  # El email del remitente (quien llena el formulario)
+    sujeto = request.data.get('subject')
+    mensaje = request.data.get('message')
+
+    print("nombre: ", nombre)
+    print("email: ", email)
+    print("sujeto: ", sujeto)
+    print("mensaje: ", mensaje)
+    # # Enviar el correo
+    # send_mail(
+    #     subject=f'{subject} - {name}',  # Asunto que incluye el nombre de quien escribe
+    #     message=f'Nombre: {name}\nEmail: {email}\n\nMensaje:\n{message}',  # Cuerpo del mensaje
+    #     from_email='marceloprueba260@gmail.com',  # Tu email
+    #     recipient_list=['marcelop639@gmail.com'],  # El destinatario del correo
+    #     fail_silently=False,
+    # )
+
+    # Crear el correo
+    email_message = EmailMessage(
+        subject=f'{sujeto} - {nombre}',  # Asunto que incluye el nombre de quien escribe
+        body=f'Nombre: {nombre}\nEmail: {email}\n\nMensaje:\n{mensaje}',  # Cuerpo del mensaje
+        from_email='marceloprueba260@gmail.com',  # Desde tu email
+        to=['marcelop639@gmail.com'],  # El destinatario del correo
+        reply_to=[email]  # Email de quien llena el formulario
+    )
+
+    try:
+        email_message.send(fail_silently=False)
+        logger.info("Email enviado exitosamente")
+        return Response({"message": "Email enviado exitosamente."}, status=200)
+    except Exception as e:
+        logger.error(f"Error al enviar el email: {e}")
+        return Response({"error": "Error al enviar el email."}, status=500)
+
+# @api_view(['GET'])
+# def informe_pedidos_fecha_desde_hasta_raw(request):
+#     desde = request.data.get('desde')
+#     hasta = request.data.get('hasta')
+
+#     query = '''
+#         SELECT 
+#             p.fecha_creacion,
+#             p.id AS pedido_id,
+#             SUM(pp.cantidad) AS total_cantidad,
+#             p.total
+#         FROM 
+#             app_django_pedido p
+#         JOIN 
+#             app_django_pedido_producto pp ON p.id = pp.pedido_id
+#         WHERE 
+#             p.fecha_creacion BETWEEN %s AND %s
+#         GROUP BY 
+#             p.fecha_creacion, p.id, p.total
+#         ORDER BY 
+#             p.fecha_creacion;
+#     '''
+
+#     with connection.cursor() as cursor:
+#         cursor.execute(query, [desde, hasta])
+#         rows = cursor.fetchall()
+#         columns = [col[0] for col in cursor.description]
+#         results = []
+#         for row in rows:
+#             row_dict = {}
+#             for idx, col in enumerate(columns):
+#                 row_dict[col] = row[idx]
+#             results.append(row_dict)
+
+#     return Response(results)
