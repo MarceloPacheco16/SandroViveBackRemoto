@@ -2,7 +2,8 @@ from rest_framework import serializers
 
 from django.contrib.auth.hashers import make_password  # Importa make_password
 
-from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, Estado, Pedido, Pedido_Producto, Factura, Detalle_Envio, Talle
+from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, EstadoPedido, Pedido, Pedido_Producto, EstadoPago, MetodoPago
+from app_django.models import Factura, Detalle_Envio, Talle
 
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -69,19 +70,21 @@ class UsuarioSerializer(serializers.ModelSerializer):
     #     return super().update(instance, validated_data)
      
 class ClienteSerializer(serializers.ModelSerializer):
+    descuento = serializers.DecimalField(max_digits=4, decimal_places=2, required=False)
+
     class Meta:
         model = Cliente
-        fields = ('id','nombre','apellido','telefono','domicilio','localidad','provincia','codigo_postal','usuario','activo')
+        fields = ('id','nombre','apellido','telefono','domicilio','localidad','provincia','codigo_postal','descuento','usuario','activo')
 
 class EmpleadoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Empleado
         fields = ('id','nombre','apellido','rol','usuario','activo')
 
-class EstadoSerializer(serializers.ModelSerializer):
+class EstadoPedidoSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Estado
-        fields = ('id','tipo_estado')
+        model = EstadoPedido
+        fields = ('id','estado')
 
 class PedidoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -103,16 +106,25 @@ class Pedido_ProductoSerializer(serializers.ModelSerializer):
         model = Pedido_Producto
         fields = ('id', 'pedido_id', 'producto_id', 'producto_nombre', 'producto_precio', 'producto_imagen', 'cantidad', 'sub_total')
 
+class EstadoPagoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EstadoPago
+        fields = ('id','estado')
+
+class MetodoPagoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MetodoPago
+        fields = ('id','metodo')
+
 class FacturaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Factura
-        fields = ('id','pedido','fecha_emision','total','estado_pago','metodo_pago', 'observaciones')
+        fields = ('id','pedido','fecha_emision','descuento','iva','total','estado_pago','metodo_pago', 'observaciones')
 
 class Detalle_EnvioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Detalle_Envio
-        fields = ('id','pedido','domicilio','localidad','provincia', 'fecha_creacion', 'observaciones')
-
+        fields = ('id','pedido','domicilio','localidad','provincia', 'fecha_creacion', 'comentario', 'observaciones')
 
 class TalleSerializer(serializers.ModelSerializer):
     class Meta:

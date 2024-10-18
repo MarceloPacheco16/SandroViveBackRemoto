@@ -22,12 +22,16 @@ urlpatterns = [
     re_path(r'^cliente/(?P<pk>[0-9]+)$', views.ClienteDetail.as_view()),
     re_path(r'^empleado$', views.EmpleadoList.as_view()),
     re_path(r'^empleado/(?P<pk>[0-9]+)$', views.EmpleadoDetail.as_view()),
-    re_path(r'^estado$', views.EstadoList.as_view()),
-    re_path(r'^estado/(?P<pk>[0-9]+)$', views.EstadoDetail.as_view()),
+    re_path(r'^estadoPedido$', views.EstadoPedidoList.as_view()),
+    re_path(r'^estadoPedido/(?P<pk>[0-9]+)$', views.EstadoPedidoDetail.as_view()),
     re_path(r'^pedido$', views.PedidoList.as_view()),
     re_path(r'^pedido/(?P<pk>[0-9]+)$', views.PedidoDetail.as_view()),
     re_path(r'^pedido_producto$', views.Pedido_ProductoList.as_view()),
     re_path(r'^pedido_producto/(?P<pk>[0-9]+)$', views.Pedido_ProductoDetail.as_view()),
+    re_path(r'^estadopago$', views.EstadoPagoList.as_view()),
+    re_path(r'^estadopago/(?P<pk>[0-9]+)$', views.EstadoPagoDetail.as_view()),
+    re_path(r'^metodopago$', views.MetodoPagoList.as_view()),
+    re_path(r'^metodopago/(?P<pk>[0-9]+)$', views.MetodoPagoDetail.as_view()),
     re_path(r'^factura$', views.FacturaList.as_view()),
     re_path(r'^factura/(?P<pk>[0-9]+)$', views.FacturaDetail.as_view()),
     re_path(r'^detalle_envio$', views.Detalle_EnvioList.as_view()),
@@ -51,7 +55,10 @@ urlpatterns = [
     path('pedido/cliente/<int:cliente_id>/detalle/', views.pedido_carrito_por_cliente),
     path('pedido/cliente/<int:pedido_id>/productos/', views.productos_por_pedido),
     path('usuario/<int:usuario_id>/verificar-contrasenia/', views.verificar_contrasenia_actual),
-    path('cliente/<int:cliente_id>/pedido-carrito/', views.productos_carrito, name='productos_carrito'),
+    path('cliente/<int:cliente_id>/pedido-carrito/', views.pedido_productos_carrito_por_cliente, name='productos_carrito'),
+    path('contacto/envia-email/', views.contacto_enviar_email),
+    
+    # path('informe/pedido-fecha-desde-hasta/', views.informe_pedidos_fecha_desde_hasta_raw),
 ]
 
 if settings.DEBUG:
