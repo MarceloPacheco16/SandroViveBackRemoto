@@ -40,7 +40,6 @@ from app_django.models import Factura, Detalle_Envio, Talle
 from app_django.serializers import CategoriaSerializer, SubcategoriaSerializer, ProductoSerializer, ProvinciaSerializer, LocalidadSerializer, UsuarioSerializer
 from app_django.serializers import ClienteSerializer, EmpleadoSerializer, EstadoPedidoSerializer, PedidoSerializer, Pedido_ProductoSerializer, EstadoPagoSerializer, MetodoPagoSerializer
 from app_django.serializers import FacturaSerializer, Detalle_EnvioSerializer, TalleSerializer
-# Create your views here.
 
 #SIRVE PARA ENVIAR EMAIL
 import logging
@@ -49,7 +48,7 @@ logger = logging.getLogger('django')
 logger.setLevel(logging.DEBUG)
 #SIRVE PARA ENVIAR EMAIL
 
-        
+# Create your views here.       
 class CategoriaList(generics.ListCreateAPIView):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
@@ -642,16 +641,12 @@ def informe_pedidos_fecha_desde_hasta_raw(request):
     desde = request.data.get('desde')
     hasta = request.data.get('hasta')
 
-    print(desde)
-    print(hasta)
-
     query = '''
         SELECT 
             p.fecha_creacion,
             p.id AS pedido_id,
             SUM(pp.cantidad) AS total_cantidad,
-            p.total,
-            p.observaciones
+            p.total
         FROM 
             app_django_pedido p
         JOIN 
