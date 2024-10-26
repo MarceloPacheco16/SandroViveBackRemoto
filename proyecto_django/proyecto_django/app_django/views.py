@@ -41,6 +41,13 @@ from app_django.serializers import CategoriaSerializer, SubcategoriaSerializer, 
 from app_django.serializers import ClienteSerializer, EmpleadoSerializer, EstadoPedidoSerializer, PedidoSerializer, Pedido_ProductoSerializer, EstadoPagoSerializer, MetodoPagoSerializer
 from app_django.serializers import FacturaSerializer, Detalle_EnvioSerializer, TalleSerializer
 
+#SIRVE PARA ENVIAR EMAIL
+import logging
+
+logger = logging.getLogger('django')
+logger.setLevel(logging.DEBUG)
+#SIRVE PARA ENVIAR EMAIL
+
 # Create your views here.       
 class CategoriaList(generics.ListCreateAPIView):
     queryset = Categoria.objects.all()
@@ -611,14 +618,6 @@ def contacto_enviar_email(request):
     print("email: ", email)
     print("sujeto: ", sujeto)
     print("mensaje: ", mensaje)
-    # # Enviar el correo
-    # send_mail(
-    #     subject=f'{subject} - {name}',  # Asunto que incluye el nombre de quien escribe
-    #     message=f'Nombre: {name}\nEmail: {email}\n\nMensaje:\n{message}',  # Cuerpo del mensaje
-    #     from_email='marceloprueba260@gmail.com',  # Tu email
-    #     recipient_list=['marcelop639@gmail.com'],  # El destinatario del correo
-    #     fail_silently=False,
-    # )
 
     # Crear el correo
     email_message = EmailMessage(
@@ -637,38 +636,38 @@ def contacto_enviar_email(request):
         logger.error(f"Error al enviar el email: {e}")
         return Response({"error": "Error al enviar el email."}, status=500)
 
-# @api_view(['GET'])
-# def informe_pedidos_fecha_desde_hasta_raw(request):
-#     desde = request.data.get('desde')
-#     hasta = request.data.get('hasta')
+@api_view(['POST'])
+def informe_pedidos_fecha_desde_hasta_raw(request):
+    desde = request.data.get('desde')
+    hasta = request.data.get('hasta')
 
-#     query = '''
-#         SELECT 
-#             p.fecha_creacion,
-#             p.id AS pedido_id,
-#             SUM(pp.cantidad) AS total_cantidad,
-#             p.total
-#         FROM 
-#             app_django_pedido p
-#         JOIN 
-#             app_django_pedido_producto pp ON p.id = pp.pedido_id
-#         WHERE 
-#             p.fecha_creacion BETWEEN %s AND %s
-#         GROUP BY 
-#             p.fecha_creacion, p.id, p.total
-#         ORDER BY 
-#             p.fecha_creacion;
-#     '''
+    query = '''
+        SELECT 
+            p.fecha_creacion,
+            p.id AS pedido_id,
+            SUM(pp.cantidad) AS total_cantidad,
+            p.total
+        FROM 
+            app_django_pedido p
+        JOIN 
+            app_django_pedido_producto pp ON p.id = pp.pedido_id
+        WHERE 
+            p.fecha_creacion BETWEEN %s AND %s
+        GROUP BY 
+            p.fecha_creacion, p.id, p.total
+        ORDER BY 
+            p.fecha_creacion;
+    '''
 
-#     with connection.cursor() as cursor:
-#         cursor.execute(query, [desde, hasta])
-#         rows = cursor.fetchall()
-#         columns = [col[0] for col in cursor.description]
-#         results = []
-#         for row in rows:
-#             row_dict = {}
-#             for idx, col in enumerate(columns):
-#                 row_dict[col] = row[idx]
-#             results.append(row_dict)
+    with connection.cursor() as cursor:
+        cursor.execute(query, [desde, hasta])
+        rows = cursor.fetchall()
+        columns = [col[0] for col in cursor.description]
+        results = []
+        for row in rows:
+            row_dict = {}
+            for idx, col in enumerate(columns):
+                row_dict[col] = row[idx]
+            results.append(row_dict)
 
-#     return Response(results)
+    return Response(results)

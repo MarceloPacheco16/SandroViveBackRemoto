@@ -58,7 +58,7 @@ urlpatterns = [
     path('cliente/<int:cliente_id>/pedido-carrito/', views.pedido_productos_carrito_por_cliente, name='productos_carrito'),
     path('contacto/envia-email/', views.contacto_enviar_email),
     
-    # path('informe/pedido-fecha-desde-hasta/', views.informe_pedidos_fecha_desde_hasta_raw),
+    path('informe/pedido-fecha-desde-hasta/', views.informe_pedidos_fecha_desde_hasta_raw),
 ]
 
 if settings.DEBUG:
