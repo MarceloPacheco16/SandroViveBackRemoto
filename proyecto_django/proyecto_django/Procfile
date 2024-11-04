@@ -1,1 +1,1 @@
-web: python manage.py migrate && python manage.py collectstatic --noinput && gunicorn proyecto_django.wsgi:application --bind 0.0.0.0:$PORT
+web: python manage.py migrate && python manage.py collectstatic --noinput && web: gunicorn proyecto_django.proyecto_django.wsgi --log-file -

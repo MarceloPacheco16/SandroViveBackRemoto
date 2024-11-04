@@ -110,7 +110,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'marceloprueba260@gmail.com'  # Tu email
-EMAIL_HOST_PASSWORD = 'ygpdafawgbpulksc'  # Contraseña del email
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # Contraseña del email
 DEFAULT_FROM_EMAIL = 'marceloprueba260@gmail.com'  # Mismo email por defecto
 
 # Password validation
