@@ -48,6 +48,9 @@ logger = logging.getLogger('django')
 logger.setLevel(logging.DEBUG)
 #SIRVE PARA ENVIAR EMAIL
 
+def home(request):
+    return HttpResponse("Bienvenido a la página principal de la API")
+
 # Create your views here.       
 class CategoriaList(generics.ListCreateAPIView):
     queryset = Categoria.objects.all()

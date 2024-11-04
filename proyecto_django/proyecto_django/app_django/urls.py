@@ -6,6 +6,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    path('', views.home, name='home'),  # Ruta para la raíz
     re_path(r'^categoria$', views.CategoriaList.as_view()),
     re_path(r'^categoria/(?P<pk>[0-9]+)$', views.CategoriaDetail.as_view()),
     re_path(r'^subcategoria$', views.SubcategoriaList.as_view()),

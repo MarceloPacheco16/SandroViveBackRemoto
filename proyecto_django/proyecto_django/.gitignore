@@ -1,16 +1,33 @@
-# Ignorar archivos y carpetas de Python
+# Archivos de Python y Caché
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
 
-# Ignorar entorno virtual
-venv/
-env/
+# # Entornos virtuales (cada miembro debe crear su propio entorno)
+# venv/
 
-# Ignorar base de datos SQLite
-db.sqlite3
-
-# Ignorar variables de entorno
+# Archivos de configuración sensible
 .env
+.env.*
 
-# Ignorar archivos estáticos generados
-staticfiles/
+# # Archivos de base de datos local (SQLite) 
+# db.sqlite3
+
+# Archivos de caché y logs (pueden variar por entorno)
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.so
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Configuración específica del sistema operativo
+Thumbs.db
+ehthumbs.db
+Desktop.ini
