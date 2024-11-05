@@ -50,6 +50,36 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 ]
 
+# Configuración de REST Framework
+REST_FRAMEWORK = {
+    # Especifica el esquema de autenticación que deseas utilizar
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    # Especifica el esquema de permisos que deseas utilizar
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',  # Permitir acceso a todos los usuarios
+    ],
+    # Agrega otros ajustes que consideres necesarios
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',  # Control de la tasa de solicitudes para usuarios anónimos
+        'rest_framework.throttling.UserRateThrottle',  # Control de la tasa de solicitudes para usuarios autenticados
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',  # 100 solicitudes por día para anónimos
+        'user': '1000/day',  # 1000 solicitudes por día para usuarios autenticados
+    },
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',  # Renderiza respuestas en formato JSON
+        'rest_framework.renderers.BrowsableAPIRenderer',  # Agregar el renderizador de navegador
+    ],
+    'DEFAULT_TEMPLATE_PACK': 'rest_framework/horizontal',
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',  # Permite analizar solicitudes en formato JSON
+    ],
+}
+
 # Configuración de CORS para permitir el origen de Angular
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:4200",
@@ -64,6 +94,7 @@ CORS_ALLOW_CREDENTIALS = True
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Añadir WhiteNoise aquí
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
