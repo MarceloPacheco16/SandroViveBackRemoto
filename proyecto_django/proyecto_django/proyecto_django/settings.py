@@ -96,12 +96,12 @@ REST_FRAMEWORK = {
 # Configuración de CORS para permitir el origen de Angular
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:4200",
-    "https://sandro-vive-front-remoto.vercel.app/",
+    "https://sandro-vive-front-remoto.vercel.app",
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
-    "https://sandro-vive-front-remoto.vercel.app/",
+    "https://sandro-vive-front-remoto.vercel.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
