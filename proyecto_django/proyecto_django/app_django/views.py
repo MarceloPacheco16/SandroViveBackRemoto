@@ -49,7 +49,11 @@ logger.setLevel(logging.DEBUG)
 #SIRVE PARA ENVIAR EMAIL
 
 def home(request):
-    return HttpResponse("Bienvenido a la página principal de la API")
+    try:
+        return HttpResponse("Bienvenido a la página principal de la API")
+    except Exception as e:
+        logger.error(f"Error al renderizar la vista home: {str(e)}")
+        return HttpResponse("Hubo un error", status=500)
 
 # Create your views here.       
 class CategoriaList(generics.ListCreateAPIView):
