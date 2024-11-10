@@ -18,4 +18,6 @@ application = get_wsgi_application()
 
 # Usar Waitress para servir la aplicación en producción
 if __name__ == "__main__":
-    serve(application, host='0.0.0.0', port=8000)
+    port = int(os.environ.get("PORT", 8000))  # Usa el puerto de Railway o 8000 por defecto
+    print(f"Servidor arrancado en el puerto: {port}")  # Log para confirmar el puerto
+    serve(application, host='0.0.0.0', port=port)

@@ -4,7 +4,7 @@ set -x  # Muestra cada comando antes de ejecutarlo
 
 echo "Iniciando script..."
 
-# Establecer el puerto si no está definido
+# Establecer el puerto si no está definido en la variable de entorno PORT
 export PORT=${PORT:-8000}
 
 # Navegar al directorio del proyecto donde se encuentra manage.py
