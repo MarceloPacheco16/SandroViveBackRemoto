@@ -13,11 +13,15 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 
-# ESTO NO ES NECESARIO EN PRODUCCION (Variables de Entorno en Plataforma de Railway)
-from dotenv import load_dotenv
+# # SECURITY WARNING: don't run with debug turned on in production!
+# DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
+print(f"DEBUG: {DEBUG}")
 
-# Solo cargar las variables del archivo .env si DEBUG es True (entorno de desarrollo)
-if os.getenv('DEBUG', 'False') == 'True':
+
+# ESTO NO ES NECESARIO EN PRODUCCION (Variables de Entorno en Plataforma de Railway)
+if DEBUG:  # Solo carga .env en desarrollo
+    from dotenv import load_dotenv
     load_dotenv()
 # ESTO NO ES NECESARIO EN PRODUCCION (Variables de Entorno en Plataforma de Railway)
 
@@ -32,11 +36,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECRET_KEY = 'django-insecure-i)o17+#qxfu2@hi8ngen8fw1)e+2x5c^p*jl(7!pa$2635qt-a'
 SECRET_KEY = os.getenv('SECRET_KEY')
 print(f"SECRET_KEY: {SECRET_KEY}")
-
-# # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
-print(f"DEBUG: {DEBUG}")
 
 # # ALLOWED_HOSTS = []
 # ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
