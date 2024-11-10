@@ -12,10 +12,14 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+
+# ESTO NO ES NECESARIO EN PRODUCCION (Variables de Entorno en Plataforma de Railway)
 from dotenv import load_dotenv
 
-# Cargar variables del archivo .env
-load_dotenv()
+# Solo cargar las variables del archivo .env si DEBUG es True (entorno de desarrollo)
+if os.getenv('DEBUG', 'False') == 'True':
+    load_dotenv()
+# ESTO NO ES NECESARIO EN PRODUCCION (Variables de Entorno en Plataforma de Railway)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,13 +31,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # # SECURITY WARNING: keep the secret key used in production secret!
 # SECRET_KEY = 'django-insecure-i)o17+#qxfu2@hi8ngen8fw1)e+2x5c^p*jl(7!pa$2635qt-a'
 SECRET_KEY = os.getenv('SECRET_KEY')
+print(f"SECRET_KEY: {SECRET_KEY}")
 
 # # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
+print(f"DEBUG: {DEBUG}")
 
-# ALLOWED_HOSTS = []
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
+# # ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '')  # Establecer un valor predeterminado vacío
+if ALLOWED_HOSTS:  # Si la variable está vacía, evitamos el split
+    ALLOWED_HOSTS = ALLOWED_HOSTS.split(',')
+else:
+    ALLOWED_HOSTS = []
+
+# Depuración: Imprimir el valor de ALLOWED_HOSTS para verificar si se carga correctamente
+print(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
 
 
 # Application definition
