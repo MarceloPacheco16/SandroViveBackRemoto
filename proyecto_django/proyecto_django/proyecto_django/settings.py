@@ -12,7 +12,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
-import dj_database_url
+#Para usar una Base de Datos de PostgreSQL en vez de Sqlite3 (Recomendado - estado: Incompleto)
+# import dj_database_url
 
 # # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
@@ -149,11 +150,13 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-# Configuración para entorno de producción
-if not DEBUG:  # Si DEBUG es False, se considera que estamos en producción
-    DATABASES['default'] = dj_database_url.config(
-        default=os.getenv('DATABASE_URL')
-    )
+# #Para usar una Base de Datos de PostgreSQL en vez de Sqlite3 (Recomendado - estado: Incompleto)
+# # Configuración para entorno de producción
+# if not DEBUG:  # Si DEBUG es False, se considera que estamos en producción
+#     DATABASES['default'] = dj_database_url.config(
+#         default=os.getenv('DATABASE_URL')
+#     )
+# #Para usar una Base de Datos de PostgreSQL en vez de Sqlite3 (Recomendado - estado: Incompleto)
 
 
 # Configuración de email
