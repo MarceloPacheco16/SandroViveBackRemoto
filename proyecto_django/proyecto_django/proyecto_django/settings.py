@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
 
 # # SECURITY WARNING: don't run with debug turned on in production!
 # DEBUG = True
@@ -148,6 +149,12 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+# Configuración para entorno de producción
+if not DEBUG:  # Si DEBUG es False, se considera que estamos en producción
+    DATABASES['default'] = dj_database_url.config(
+        default=os.getenv('DATABASE_URL')
+    )
+
 
 # Configuración de email
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -195,6 +202,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
