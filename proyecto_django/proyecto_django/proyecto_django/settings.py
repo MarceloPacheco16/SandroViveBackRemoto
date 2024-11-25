@@ -59,12 +59,21 @@ CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
 CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
 CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
 
+# Configuración para organizar archivos estáticos
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
+    'API_KEY': CLOUDINARY_API_KEY,
+    'API_SECRET': CLOUDINARY_API_SECRET,
+    'STATIC_IMAGES_FOLDER': 'staticfiles',  # Carpeta raíz para archivos estáticos
+}
+
 # # Configuración de Cloudinary
 # cloudinary.config(
 #     cloud_name=CLOUDINARY_CLOUD_NAME,
 #     api_key=CLOUDINARY_API_KEY,
 #     api_secret=CLOUDINARY_API_SECRET,
 # )
+
 # Configuración de Cloudinary como almacenamiento de archivos
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
