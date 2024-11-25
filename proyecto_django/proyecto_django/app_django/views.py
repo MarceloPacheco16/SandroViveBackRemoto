@@ -39,6 +39,7 @@ from django.core.files.storage import default_storage
 import time
 import cloudinary
 import cloudinary.uploader
+import cloudinary.utils
 import cloudinary.api
 from cloudinary.exceptions import Error as CloudinaryError
 from datetime import datetime
@@ -803,20 +804,22 @@ def informe_pedidos_fecha_desde_hasta_raw(request):
 
     return Response(results)
 
-# @csrf_exempt  # Si estás trabajando con formularios POST sin autenticar
-# def get_cloudinary_signature(request):
-#     timestamp = int(time.time())  # Hora actual en formato Unix
-#     params_to_sign = {
-#         "timestamp": timestamp,
-#         "upload_preset": "your_upload_preset",  # Usa tu preset
-#     }
+@csrf_exempt  # Si estás trabajando con formularios POST sin autenticar
+def get_cloudinary_signature(request):
+    timestamp = int(time.time())  # Hora actual en formato Unix
 
-#     # Generamos la firma usando tu api_secret
-#     signature = cloudinary.utils.api_sign_request(params_to_sign, settings.CLOUDINARY_API_SECRET)
+    # Definir los parámetros que se van a firmar
+    params_to_sign = {
+        "timestamp": timestamp,
+        "upload_preset": "ml_default",  # Aquí usas el nombre de tu preset
+    }
 
-#     # Devolvemos la firma junto con el api_key y el timestamp
-#     return JsonResponse({
-#         "signature": signature,
-#         "api_key": settings.CLOUDINARY_API_KEY,
-#         "timestamp": timestamp
-#     })
+    # Generamos la firma usando tu api_secret
+    signature = cloudinary.utils.api_sign_request(params_to_sign, settings.CLOUDINARY_API_SECRET)
+
+    # Devolvemos la firma junto con el api_key y el timestamp
+    return JsonResponse({
+        "signature": signature,
+        "api_key": settings.CLOUDINARY_API_KEY,
+        "timestamp": timestamp
+    })
