@@ -68,6 +68,9 @@ CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
 # Configuración de Cloudinary como almacenamiento de archivos
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
+# Usando Cloudinary para los archivos estáticos
+STATICFILES_STORAGE = 'cloudinary_storage.storage.StaticHashedCloudinaryStorage'
+
 
 # Application definition
 
@@ -225,7 +228,13 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Usando Whitenoise para servir archivos estáticos locales en desarrollo
+# Esto solo afectará a los archivos estáticos locales, no los de Cloudinary
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
