@@ -1,4 +1,5 @@
 # from email.message import EmailMessage
+from django.conf import settings
 from django.db import connection
 from django.shortcuts import render
 
@@ -33,6 +34,15 @@ import base64
 
 from django.db.models import Q
 from django.forms import model_to_dict
+
+from django.core.files.storage import default_storage
+import time
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+from cloudinary.exceptions import Error as CloudinaryError
+from datetime import datetime
+from io import BytesIO
 
 from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, EstadoPedido, Pedido, Pedido_Producto, EstadoPago, MetodoPago
 from app_django.models import Factura, Detalle_Envio, Talle
@@ -77,11 +87,125 @@ class ProductoList(generics.ListCreateAPIView):
     serializer_class = ProductoSerializer
     parser_classes = (MultiPartParser, FormParser)  # Añade estos parsers para manejar archivos
 
+    # def post(self, request, *args, **kwargs):
+    #     # Crear un serializer con los datos recibidos
+    #     serializer = self.get_serializer(data=request.data)
+    #     print("Datos recibidos:", request.data)
+
+    #     # Validar el serializer
+    #     if not serializer.is_valid():
+    #         print("Errores de validación:", serializer.errors)
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    #     # Guardar el producto sin la imagen inicialmente
+    #     producto = serializer.save()
+    #     print("Producto creado sin imagen:", producto)
+
+    #     # Manejo de la imagen (si está presente en los archivos)
+    #     nueva_imagen = request.FILES.get('imagen')
+    #     if nueva_imagen:
+    #         if nueva_imagen.size == 0:
+    #             print("La imagen está vacía.")
+    #             return Response({'error': 'El archivo de imagen está vacío'}, status=status.HTTP_400_BAD_REQUEST)
+
+    #         try:
+    #             # Leer los bytes de la imagen para asegurarnos de que no estén vacíos
+    #             nueva_imagen.seek(0)  # Asegurarse de que el puntero esté al inicio
+    #             image_bytes = nueva_imagen.read()
+    #             if not image_bytes:
+    #                 print("Los bytes de la imagen están vacíos.")
+    #                 return Response({'error': 'La imagen no se pudo leer correctamente'}, status=status.HTTP_400_BAD_REQUEST)
+                
+    #             # Generar un identificador único para la imagen
+    #             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    #             public_id = f'producto_{producto.id}_{timestamp}'
+    #             print(f"Generando public_id para la imagen: {public_id}")
+
+    #             # Subir la imagen a Cloudinary
+    #             upload_result = cloudinary.uploader.upload(
+    #                 image_bytes,
+    #                 public_id=public_id,
+    #                 overwrite=True,
+    #                 folder='media'  # Opcional, especifica una carpeta
+    #             )
+    #             # Guardar la URL segura en el campo `imagen`
+    #             producto.imagen = upload_result['secure_url'].split('/')[-1]
+    #             producto.save()
+    #             print("Imagen subida y asignada al producto:", producto.imagen)
+    #         except cloudinary.exceptions.Error as e:
+    #             print(f"Error al subir imagen a Cloudinary: {e}")
+    #             return Response({'error': f'Error subiendo la imagen: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+    #         except Exception as e:
+    #             print(f"Error inesperado: {e}")
+    #             return Response({'error': 'Error inesperado al subir la imagen'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    #     # Retornar el producto creado con la imagen (si aplica)
+    #     serializer = self.get_serializer(producto)  # Serializar el producto actualizado
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 class ProductoDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
     parser_classes = (MultiPartParser, FormParser)  # Añade estos parsers para manejar archivos
-    
+
+    # def put(self, request, *args, **kwargs):
+    #     try:
+    #         # Intentamos obtener el producto que vamos a actualizar
+    #         producto = self.get_object()
+    #         print(f"Producto existente para actualizar: {producto}")
+    #     except Producto.DoesNotExist:
+    #         # Si no se encuentra el producto, devolvemos un error 404
+    #         return Response({'error': 'Producto no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+
+    #     # Usamos el serializer para validar y actualizar los datos del producto con los datos de la petición
+    #     serializer = self.get_serializer(producto, data=request.data, partial=True)
+
+    #      # Si los datos no son válidos, devolvemos los errores del serializer
+    #     if not serializer.is_valid():
+    #         print(f"Errores del serializer: {serializer.errors}")
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    #     # Manejo de la imagen subida (si existe una nueva imagen en la solicitud)
+    #     nueva_imagen = request.FILES.get('imagen')
+    #     if nueva_imagen:
+    #         # Verificamos si el archivo de imagen está vacío
+    #         if nueva_imagen.size == 0:
+    #             print("El archivo está vacío.")
+    #             return Response({'error': 'El archivo de imagen está vacío'}, status=status.HTTP_400_BAD_REQUEST)
+    #         try:
+    #             # Creamos un identificador único para la imagen, basado en la fecha y el ID del producto
+    #             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    #             public_id = f'producto_{producto.id}_{timestamp}'
+    #             print(f"Generando public_id: {public_id}")
+
+    #             # Subimos la imagen a Cloudinary, pasando el archivo y el identificador único
+    #             upload_result = cloudinary.uploader.upload(
+    #                 nueva_imagen,
+    #                 public_id=public_id, # Usamos el identificador único para evitar colisiones
+    #                 overwrite=True, # Permitir sobrescribir imágenes existentes con el mismo ID
+    #                 folder='media' # Especificamos la carpeta en la que se almacenará la imagen
+    #             )
+    #             # Asignamos la URL segura de Cloudinary al campo imagen del producto
+    #             producto.imagen = upload_result['secure_url'].split('/')[-1] 
+    #             print(f"Imagen subida correctamente: {producto.imagen}")
+    #         except cloudinary.exceptions.Error as e:
+    #             # Si ocurre un error al subir la imagen, lo capturamos y devolvemos un mensaje de error
+    #             print(f"Error al subir imagen a Cloudinary: {e}")
+    #             return Response({'error': f'Error subiendo la imagen: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+    #         except Exception as e:
+    #              # Capturamos cualquier otro error inesperado y devolvemos un mensaje de error genérico
+    #             print(f"Error inesperado: {e}")
+    #             return Response({'error': 'Error inesperado al subir la imagen'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    #     elif 'imagen' in request.data and (not request.data['imagen'] or request.data['imagen'] == 'null'):
+    #         # Si el campo de imagen está vacío o es 'null', no se realiza ninguna modificación en la imagen
+    #         print("Campo 'imagen' vacío o null en el request. No se modifica la imagen.")
+
+    #     # Guardamos los cambios del producto con los datos actualizados del serializer
+    #     producto = serializer.save()
+
+    #     # Devolvemos los datos actualizados del producto como respuesta
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
+        
 class ProvinciaList(generics.ListCreateAPIView):
     queryset = Provincia.objects.all()
     serializer_class = ProvinciaSerializer
@@ -380,12 +504,14 @@ def productos_por_subcategoria(request, subcategoria_id):
         return Response({'error': 'Subcategoria no encontrada'}, status=status.HTTP_404_NOT_FOUND)
 
 # Función de vista para obtener productos activos
+@api_view(['GET'])
 def productos_activos(request):
     productos = Producto.objects.filter(activo=1)
-    data = list(productos.values())
-    return JsonResponse(data, safe=False)
+    serializer = ProductoSerializer(productos, many=True)
+    return Response(serializer.data)
 
 # Función de vista para obtener productos activos segun estos distintos tipos de filtros
+@api_view(['GET'])
 def filtrar_productos(request):
     nombre = request.GET.get('nombre', '')
     descripcion = request.GET.get('descripcion', '')
@@ -425,10 +551,8 @@ def filtrar_productos(request):
     if talle:
         productos = productos.filter(talle=talle)
 
-    # Serializar los productos a formato JSON
-    productos_json = list(productos.values())
-    # Retornar los productos en formato JSON
-    return JsonResponse(productos_json, safe=False)
+    serializer = ProductoSerializer(productos, many=True)
+    return Response(serializer.data)
 
 # Función de vista para obtener productos activos
 # def productos_activos(request, producto_id):
@@ -678,3 +802,21 @@ def informe_pedidos_fecha_desde_hasta_raw(request):
             results.append(row_dict)
 
     return Response(results)
+
+# @csrf_exempt  # Si estás trabajando con formularios POST sin autenticar
+# def get_cloudinary_signature(request):
+#     timestamp = int(time.time())  # Hora actual en formato Unix
+#     params_to_sign = {
+#         "timestamp": timestamp,
+#         "upload_preset": "your_upload_preset",  # Usa tu preset
+#     }
+
+#     # Generamos la firma usando tu api_secret
+#     signature = cloudinary.utils.api_sign_request(params_to_sign, settings.CLOUDINARY_API_SECRET)
+
+#     # Devolvemos la firma junto con el api_key y el timestamp
+#     return JsonResponse({
+#         "signature": signature,
+#         "api_key": settings.CLOUDINARY_API_KEY,
+#         "timestamp": timestamp
+#     })

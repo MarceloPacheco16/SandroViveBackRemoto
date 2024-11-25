@@ -1,6 +1,10 @@
+import datetime
 from rest_framework import serializers
 
 from django.contrib.auth.hashers import make_password  # Importa make_password
+
+import cloudinary
+import cloudinary.uploader
 
 from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, EstadoPedido, Pedido, Pedido_Producto, EstadoPago, MetodoPago
 from app_django.models import Factura, Detalle_Envio, Talle
@@ -16,14 +20,61 @@ class SubcategoriaSerializer(serializers.ModelSerializer):
         fields = ('id','nombre','descripcion', 'categoria','activo')
 
 class ProductoSerializer(serializers.ModelSerializer):
-    # subcategoria = serializers.PrimaryKeyRelatedField(queryset=Subcategoria.objects.all(), allow_null=True)
-    # imagen = serializers.ImageField(allow_null=True, required=False)  # Permitir null y no requerirlo en el POST/PUT
     imagen = serializers.ImageField(allow_null=True, required=False)  # Permitir null y no requerirlo en el POST/PUT
     
     class Meta:
         model = Producto
         fields = ('id','nombre','descripcion','talle','color','categoria', 'subcategoria','precio','cantidad','cantidad_disponible','cantidad_limite','imagen','observaciones','activo')
+    
+    # def to_representation(self, instance):
+    #     # Llamamos al método to_representation original para obtener la representación básica
+    #     representation = super().to_representation(instance)
+        
+    #     # Solo intentamos modificar la URL si existe una imagen
+    #     imagen_url = representation.get('imagen')
+    #     if imagen_url:
+    #         # Verificamos si la URL ya es completa (empieza con 'http')
+    #         if not imagen_url.startswith('http'):
+    #             # Concatenamos la URL base de Cloudinary si la imagen no tiene una URL completa
+    #             representation['imagen'] = f'https://res.cloudinary.com/dophflucq/image/upload/v1/{imagen_url}'
+        
+    #     return representation
+    
+    def subir_imagen_a_cloudinary(self, imagen, producto_id):
+        now = datetime.datetime.now()
+        fecha_actual = now.strftime("%Y%m%d")
+        hora_actual = now.strftime("%H%M%S")
+        nombre_imagen = f"producto_{producto_id}_{fecha_actual}_{hora_actual}"
+        return cloudinary.uploader.upload(imagen, public_id=nombre_imagen, overwrite=True, folder='media')
 
+    def create(self, validated_data):
+        # Extraer el campo `imagen` si está presente en los datos validados
+        imagen = validated_data.pop('imagen', None)
+        producto = Producto.objects.create(**validated_data)
+
+        if imagen:
+            upload_result = self.subir_imagen_a_cloudinary(imagen, producto.id)
+            producto.imagen = upload_result['secure_url'].split('/')[-1] 
+            producto.save()
+
+        return producto
+
+    def update(self, instance, validated_data):
+        # Extraer el campo `imagen` si está presente en los datos validados
+        imagen = validated_data.pop('imagen', None)
+        instance = super().update(instance, validated_data)
+
+        if imagen:
+            upload_result = self.subir_imagen_a_cloudinary(imagen, instance.id)
+            instance.imagen = upload_result['secure_url'].split('/')[-1]
+            instance.save()
+        elif 'imagen' in validated_data and validated_data['imagen'] is None:
+            # Si `imagen` fue explícitamente enviada como `null`, eliminarla
+            instance.imagen = None
+            instance.save()
+
+        return instance
+    
 class ProvinciaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Provincia

@@ -60,6 +60,8 @@ urlpatterns = [
     path('contacto/envia-email/', views.contacto_enviar_email),
     
     path('informe/pedido-fecha-desde-hasta/', views.informe_pedidos_fecha_desde_hasta_raw),
+
+    path('get_cloudinary_signature/', views.get_cloudinary_signature, name='get_cloudinary_signature'),
 ]
 
 if settings.DEBUG:

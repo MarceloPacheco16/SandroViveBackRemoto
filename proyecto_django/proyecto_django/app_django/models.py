@@ -26,7 +26,9 @@ class Producto (models.Model):
     cantidad = models.IntegerField()
     cantidad_disponible = models.IntegerField()
     cantidad_limite = models.IntegerField()
-    imagen = models.ImageField(blank=True)
+    imagen = models.ImageField(null=True, blank=True) # Cloudinary manejará la carga automáticamente
+    # imagen = models.ImageField(upload_to='productos/', null=True, blank=True) # Cloudinary manejará la carga automáticamente
+    # imagen = models.URLField(null=True, blank=True)  # Acepta URLs válidas únicamente
     observaciones = models.TextField(blank=True, max_length=200)
     activo = models.IntegerField() # 0: Inactivo 1: Activo
 

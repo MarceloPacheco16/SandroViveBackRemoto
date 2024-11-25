@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+
 #Para usar una Base de Datos de PostgreSQL en vez de Sqlite3 (Recomendado - estado: Incompleto)
 # import dj_database_url
 
@@ -51,12 +52,31 @@ else:
 print(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
 
 
+# import cloudinary
+
+# Configuración de Cloudinary
+CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
+
+# # Configuración de Cloudinary
+# cloudinary.config(
+#     cloud_name=CLOUDINARY_CLOUD_NAME,
+#     api_key=CLOUDINARY_API_KEY,
+#     api_secret=CLOUDINARY_API_SECRET,
+# )
+# Configuración de Cloudinary como almacenamiento de archivos
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+
 # Application definition
 
 INSTALLED_APPS = [
     'app_django',
     'rest_framework',
     'corsheaders',
+    'cloudinary',
+    'cloudinary_storage',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
