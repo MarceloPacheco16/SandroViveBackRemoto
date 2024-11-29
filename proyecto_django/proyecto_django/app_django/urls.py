@@ -39,6 +39,12 @@ urlpatterns = [
     re_path(r'^detalle_envio/(?P<pk>[0-9]+)$', views.Detalle_EnvioDetail.as_view()),
     re_path(r'^talle$', views.TalleList.as_view()),
     re_path(r'^talle/(?P<pk>[0-9]+)$', views.TalleDetail.as_view()),
+    re_path(r'^estadodevolucion$', views.EstadoDevolucionList.as_view()), 
+    re_path(r'^estadodevolucion/(?P<pk>[0-9]+)$', views.EstadoDevolucionDetail.as_view()), 
+    re_path(r'^motivodevolucion$', views.MotivoDevolucionList.as_view()), 
+    re_path(r'^motivodevolucion/(?P<pk>[0-9]+)$', views.MotivoDevolucionDetail.as_view()), 
+    re_path(r'^devoluciones$', views.DevolucionesList.as_view()), 
+    re_path(r'^devoluciones/(?P<pk>[0-9]+)$', views.DevolucionesDetail.as_view()),
     path('get-public-key/', get_public_key),
     # path('login/', login),
     path('verificar-credenciales/', views.verificar_credenciales),
@@ -60,6 +66,9 @@ urlpatterns = [
     path('contacto/envia-email/', views.contacto_enviar_email),
     
     path('informe/pedido-fecha-desde-hasta/', views.informe_pedidos_fecha_desde_hasta_raw),
+    
+    path('devoluciones/pedidos-cliente/', views.obtener_devoluciones_cliente),
+    path('devoluciones/productos-pedido/', views.obtener_productos_pedido_con_devoluciones),
 
     path('get_cloudinary_signature/', views.get_cloudinary_signature, name='get_cloudinary_signature'),
 ]

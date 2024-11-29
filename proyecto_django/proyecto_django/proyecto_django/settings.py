@@ -51,50 +51,25 @@ else:
 # Depuración: Imprimir el valor de ALLOWED_HOSTS para verificar si se carga correctamente
 print(f"ALLOWED_HOSTS: {ALLOWED_HOSTS}")
 
-
-# import cloudinary
-
-# Configuración de Cloudinary
-CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
-CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
-CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
-
-# Configuración para organizar archivos estáticos
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
-    'API_KEY': CLOUDINARY_API_KEY,
-    'API_SECRET': CLOUDINARY_API_SECRET,
-    'STATIC_IMAGES_FOLDER': 'staticfiles',  # Carpeta raíz para archivos estáticos
-}
-
-# # Configuración de Cloudinary
-# cloudinary.config(
-#     cloud_name=CLOUDINARY_CLOUD_NAME,
-#     api_key=CLOUDINARY_API_KEY,
-#     api_secret=CLOUDINARY_API_SECRET,
-# )
-
-# Configuración de Cloudinary como almacenamiento de archivos
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
-# Usando Cloudinary para los archivos estáticos
-STATICFILES_STORAGE = 'cloudinary_storage.storage.StaticHashedCloudinaryStorage'
-
-
 # Application definition
 
 INSTALLED_APPS = [
-    'app_django',
-    'rest_framework',
-    'corsheaders',
-    'cloudinary',
-    'cloudinary_storage',
+    # Apps de Django
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # Apps de terceros
+    'rest_framework',
+    'corsheaders',
+    'cloudinary',
+    'cloudinary_storage',
+
+    # Apps locales
+    'app_django',
 ]
 
 # Configuración de REST Framework
@@ -143,7 +118,6 @@ CORS_ALLOW_CREDENTIALS = True
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # Añadir WhiteNoise aquí
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -232,24 +206,56 @@ USE_I18N = True
 USE_TZ = True
 
 
+# import cloudinary
+
+# Configuración de Cloudinary
+CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
+
+# Configuración para organizar archivos estáticos
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
+    'API_KEY': CLOUDINARY_API_KEY,
+    'API_SECRET': CLOUDINARY_API_SECRET,
+    'STATIC_IMAGES_FOLDER': 'staticfiles',  # Carpeta raíz para archivos estáticos en Cloudinary
+}
+
+# # Configuración de Cloudinary
+# cloudinary.config(
+#     cloud_name=CLOUDINARY_CLOUD_NAME,
+#     api_key=CLOUDINARY_API_KEY,
+#     api_secret=CLOUDINARY_API_SECRET,
+# )
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# Archivos estáticos
+STATIC_URL = '/static/'  # URL base para archivos estáticos
+STATICFILES_DIRS = [BASE_DIR / 'static']  # Carpeta local donde están los archivos estáticos
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Carpeta donde collectstatic recopila archivos
 
-# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# # Usando Cloudinary para los archivos estáticos
+# STATICFILES_STORAGE = 'cloudinary_storage.storage.StaticHashedCloudinaryStorage'
+# Para archivos estáticos, usa el almacenamiento estándar o Whitenoise
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
-# Usando Whitenoise para servir archivos estáticos locales en desarrollo
-# Esto solo afectará a los archivos estáticos locales, no los de Cloudinary
-if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# # Usando Whitenoise para servir archivos estáticos locales en desarrollo
+# # Esto solo afectará a los archivos estáticos locales, no los de Cloudinary
+# if not DEBUG:
+#     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Archivos multimedia
+MEDIA_URL = '/media/'  # URL base para archivos multimedia
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # Carpeta local para archivos multimedia
+
+# Configuración de Cloudinary como almacenamiento para los archivos multimedia
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
+# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

@@ -7,7 +7,7 @@ import cloudinary
 import cloudinary.uploader
 
 from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, EstadoPedido, Pedido, Pedido_Producto, EstadoPago, MetodoPago
-from app_django.models import Factura, Detalle_Envio, Talle
+from app_django.models import Factura, Detalle_Envio, Talle, EstadoDevolucion, MotivoDevolucion, Devoluciones
 
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -181,3 +181,18 @@ class TalleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Talle
         fields = ('id','nombre','descripcion','activo')
+
+class EstadoDevolucionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EstadoDevolucion
+        fields = ('id','estado')
+ 
+class MotivoDevolucionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MotivoDevolucion
+        fields = ('id','motivo')
+
+class DevolucionesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Devoluciones
+        fields = ('id','pedido', 'fecha_solicitud', 'producto','motivo', 'estado', 'cantidad','observacion')

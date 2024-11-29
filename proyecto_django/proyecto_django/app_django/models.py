@@ -131,3 +131,18 @@ class Talle(models.Model):
     nombre = models.CharField(max_length=10)
     descripcion = models.CharField(max_length=50)
     activo = models.IntegerField() # 0: Inactivo 1: Activo
+
+class EstadoDevolucion(models.Model):
+    estado = models.CharField(max_length=20)
+
+class MotivoDevolucion(models.Model):
+    motivo = models.CharField(max_length=20)
+
+class Devoluciones(models.Model):
+    pedido = models.ForeignKey(Pedido, null=True, on_delete=models.SET_NULL)
+    fecha_solicitud = models.DateField(auto_now=True)
+    producto = models.ForeignKey(Producto, null=True, on_delete=models.SET_NULL)
+    motivo = models.ForeignKey(MotivoDevolucion, null=True, on_delete=models.SET_NULL)
+    estado = models.ForeignKey(EstadoDevolucion, null=True, on_delete=models.SET_NULL)
+    cantidad = models.IntegerField()
+    observacion = models.TextField(blank=True, max_length=200)

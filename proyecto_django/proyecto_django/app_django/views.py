@@ -46,11 +46,11 @@ from datetime import datetime
 from io import BytesIO
 
 from app_django.models import Categoria, Subcategoria, Producto, Provincia, Localidad, Usuario, Cliente, Empleado, EstadoPedido, Pedido, Pedido_Producto, EstadoPago, MetodoPago
-from app_django.models import Factura, Detalle_Envio, Talle
+from app_django.models import Factura, Detalle_Envio, Talle, EstadoDevolucion, MotivoDevolucion, Devoluciones
 
 from app_django.serializers import CategoriaSerializer, SubcategoriaSerializer, ProductoSerializer, ProvinciaSerializer, LocalidadSerializer, UsuarioSerializer
 from app_django.serializers import ClienteSerializer, EmpleadoSerializer, EstadoPedidoSerializer, PedidoSerializer, Pedido_ProductoSerializer, EstadoPagoSerializer, MetodoPagoSerializer
-from app_django.serializers import FacturaSerializer, Detalle_EnvioSerializer, TalleSerializer
+from app_django.serializers import FacturaSerializer, Detalle_EnvioSerializer, TalleSerializer, EstadoDevolucionSerializer, MotivoDevolucionSerializer, DevolucionesSerializer
 
 #SIRVE PARA ENVIAR EMAIL
 import logging
@@ -310,6 +310,30 @@ class TalleList(generics.ListCreateAPIView):
 class TalleDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Talle.objects.all()
     serializer_class = TalleSerializer
+
+class EstadoDevolucionList(generics.ListCreateAPIView):
+    queryset = EstadoDevolucion.objects.all()
+    serializer_class = EstadoDevolucionSerializer
+
+class EstadoDevolucionDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = EstadoDevolucion.objects.all()
+    serializer_class = EstadoDevolucionSerializer
+
+class MotivoDevolucionList(generics.ListCreateAPIView):
+    queryset = MotivoDevolucion.objects.all()
+    serializer_class = MotivoDevolucionSerializer
+
+class MotivoDevolucionDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MotivoDevolucion.objects.all()
+    serializer_class = MotivoDevolucionSerializer
+
+class DevolucionesList(generics.ListCreateAPIView):
+    queryset = Devoluciones.objects.all()
+    serializer_class = DevolucionesSerializer
+
+class DevolucionesDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Devoluciones.objects.all()
+    serializer_class = DevolucionesSerializer
 
 # Archivos de clave pública y privada
 PUBLIC_KEY_FILE = "public_key.pem"
@@ -801,6 +825,89 @@ def informe_pedidos_fecha_desde_hasta_raw(request):
             for idx, col in enumerate(columns):
                 row_dict[col] = row[idx]
             results.append(row_dict)
+
+    return Response(results)
+
+@api_view(['POST'])
+def obtener_devoluciones_cliente(request):
+    cliente_id = request.data.get('cliente_id')
+
+    if not cliente_id:
+        return Response({"error": "El campo 'cliente_id' es obligatorio."}, status=400)
+
+    query = '''
+        SELECT 
+            d.fecha_solicitud || ' - Nº: ' || p.id AS devolucion_info
+        FROM 
+            app_django_devoluciones d
+        JOIN 
+            app_django_pedido p ON d.pedido_id = p.id
+        JOIN 
+            app_django_cliente c ON p.cliente_id = c.id
+        WHERE 
+            c.id = %s AND p.estado_id = 5;
+    '''
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, [cliente_id])
+        rows = cursor.fetchall()
+        results = [{"devolucion_info": row[0]} for row in rows]
+
+    return Response(results)
+
+# @api_view(['POST'])
+# def obtener_productos_pedido(request):
+#     pedido_id = request.data.get('pedido_id')
+
+#     if not pedido_id:
+#         return Response({"error": "El campo 'pedido_id' es obligatorio."}, status=400)
+
+#     query = '''
+#         SELECT 
+#             prod.nombre || ' | Cantidad: ' || pp.cantidad AS producto_info
+#         FROM 
+#             app_django_pedido_producto pp
+#         INNER JOIN 
+#             app_django_producto prod ON pp.producto_id = prod.id
+#         WHERE 
+#             pp.pedido_id = %s;
+#     '''
+
+#     with connection.cursor() as cursor:
+#         cursor.execute(query, [pedido_id])
+#         rows = cursor.fetchall()
+#         results = [{"producto_info": row[0]} for row in rows]
+
+#     return Response(results)
+
+@api_view(['POST'])
+def obtener_productos_pedido_con_devoluciones(request):
+    pedido_id = request.data.get('pedido_id')
+
+    if not pedido_id:
+        return Response({"error": "El campo 'pedido_id' es obligatorio."}, status=400)
+
+    query = '''
+        SELECT 
+            prod.nombre || ' | Cantidad: ' || 
+            (pp.cantidad - COALESCE(
+                (SELECT SUM(d.cantidad) 
+                 FROM app_django_devoluciones d 
+                 WHERE d.pedido_id = pp.pedido_id AND d.producto_id = pp.producto_id), 
+                0)
+            ) AS producto_info
+        FROM 
+            app_django_pedido_producto pp
+        INNER JOIN 
+            app_django_producto prod ON pp.producto_id = prod.id
+        WHERE 
+            pp.pedido_id = %s;
+    '''
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, [pedido_id])
+        rows = cursor.fetchall()
+        results = [{"producto_info": row[0]} for row in rows]
 
     return Response(results)
 
