@@ -844,6 +844,216 @@ def informe_pedidos_fecha_desde_hasta_raw(request):
     return Response(results)
 
 @api_view(['POST'])
+def informe_devoluciones_fecha_desde_hasta_raw(request):
+    fecha_inicio = request.data.get('fecha_inicio')
+    fecha_fin = request.data.get('fecha_fin')
+    motivo_id = request.data.get('motivo_id')  # Puede ser opcional
+    estado_id = request.data.get('estado_id')
+    # print("motivo: ", motivo_id)
+    # print("estado: ", estado_id)
+
+    # Validar que las fechas sean proporcionadas
+    if not (fecha_inicio and fecha_fin):
+        return Response({
+            "error": "Los campos 'fecha_inicio' y 'fecha_fin' son obligatorios."
+        }, status=400)
+
+    # Construir la consulta base
+    query = '''
+        SELECT 
+            d.fecha_solicitud AS fecha_solicitud,
+            d.pedido_id AS nro_pedido,
+            md.nombre AS motivo,
+            ed.nombre AS estado,
+            d.observacion AS observaciones,
+            p.nombre AS nombre_producto,
+            p.precio AS precio_producto,
+            d.cantidad AS cantidad_devuelta,
+            (d.cantidad * p.precio) AS valor_total
+        FROM 
+            app_django_devoluciones d
+        INNER JOIN 
+            app_django_estadodevolucion ed ON d.estado_id = ed.id
+        INNER JOIN 
+            app_django_motivodevolucion md ON d.motivo_id = md.id
+        INNER JOIN 
+            app_django_producto p ON d.producto_id = p.id
+        WHERE 
+            d.fecha_solicitud BETWEEN %s AND %s
+
+    '''
+
+    # Agregar la condición opcional para motivo_id
+    params = [fecha_inicio, fecha_fin]
+    if motivo_id:
+        print("motivoif: ", motivo_id)
+        query += " AND d.motivo_id = %s"
+        params.append(motivo_id)
+    
+    if estado_id:
+        print("estadoif: ", estado_id)
+        query += " AND d.estado_id = %s"
+        params.append(estado_id)
+
+    # Ejecutar la consulta y procesar los resultados
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        results = [
+            {
+                "fecha_solicitud": row[0],
+                "nro_pedido": row[1],
+                "motivo": row[2],
+                "estado": row[3],
+                "observaciones": row[4],
+                "nombre_producto": row[5],
+                "precio_producto": row[6],
+                "cantidad_devuelta": row[7],
+                "valor_total": row[8],
+            }
+            for row in rows
+        ]
+
+    return Response(results)
+
+@api_view(['POST']) # informes
+def informe_menores_ventas_fecha_desde_hasta_raw(request):
+    # print("Llamada a la API")
+    desde = request.data.get('desde')
+    hasta = request.data.get('hasta')
+
+    query = '''
+        WITH ventas AS (
+            SELECT 
+                pr.id AS producto_id, 
+                pr.nombre AS producto_nombre,
+                COALESCE(SUM(pp.cantidad), 0) AS total_vendido  
+            FROM 
+                app_django_producto pr
+            LEFT JOIN 
+                app_django_pedido_producto pp ON pr.id = pp.producto_id
+            LEFT JOIN 
+                app_django_pedido p ON pp.pedido_id = p.id
+            WHERE 
+                p.fecha_creacion BETWEEN %s AND %s OR p.fecha_creacion IS NULL
+            GROUP BY 
+                pr.id, pr.nombre
+        ),
+        promedio_ventas AS (
+            SELECT AVG(total_vendido) AS promedio FROM ventas
+        )
+        SELECT v.*
+        FROM ventas v, promedio_ventas p
+        WHERE v.total_vendido < p.promedio
+        ORDER BY v.total_vendido ASC;
+
+
+            '''
+        # usar coalesce para mostrar 0 en vez de null
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, [desde, hasta])
+        rows = cursor.fetchall()
+        columns = [col[0] for col in cursor.description]
+        results = []
+        for row in rows:
+            row_dict = {}
+            for idx, col in enumerate(columns):
+                row_dict[col] = row[idx]
+            results.append(row_dict)
+
+    return Response(results)
+
+@api_view(['POST']) # informes
+def informe_mayores_ventas_fecha_desde_hasta_raw(request):
+    # print("Llamada a la API")
+    desde = request.data.get('desde')
+    hasta = request.data.get('hasta')
+
+    query = '''
+        WITH ventas AS (
+            SELECT 
+                pr.id AS producto_id, 
+                pr.nombre AS producto_nombre,
+                COALESCE(SUM(pp.cantidad), 0) AS total_vendido  
+            FROM 
+                app_django_producto pr
+            LEFT JOIN 
+                app_django_pedido_producto pp ON pr.id = pp.producto_id
+            LEFT JOIN 
+                app_django_pedido p ON pp.pedido_id = p.id
+            WHERE 
+                p.fecha_creacion BETWEEN %s AND %s OR p.fecha_creacion IS NULL
+            GROUP BY 
+                pr.id, pr.nombre
+        ),
+        promedio_ventas AS (
+            SELECT AVG(total_vendido) AS promedio FROM ventas
+        )
+        SELECT v.*
+        FROM ventas v, promedio_ventas p
+        WHERE v.total_vendido > p.promedio
+        ORDER BY v.total_vendido ASC;
+
+
+            '''
+        # usar coalesce para mostrar 0 en vez de null
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, [desde, hasta])
+        rows = cursor.fetchall()
+        columns = [col[0] for col in cursor.description]
+        results = []
+        for row in rows:
+            row_dict = {}
+            for idx, col in enumerate(columns):
+                row_dict[col] = row[idx]
+            results.append(row_dict)
+
+    return Response(results)
+
+@api_view(['POST']) # informes
+def informe_clientes_destacados_fecha_desde_hasta_raw(request):
+    # print("Llamada a la API")
+    desde = request.data.get('desde')
+    hasta = request.data.get('hasta')
+
+    query = '''
+        SELECT 
+            c.id AS cliente_id,
+            c.nombre || ' ' || c.apellido  AS cliente_nombre,
+            COALESCE(SUM(p.total), 0) AS total_compras,
+            COALESCE(SUM(pp.cantidad), 0) AS total_articulos
+        FROM 
+            app_django_cliente c
+        LEFT JOIN 
+            app_django_pedido p ON c.id = p.cliente_id
+        LEFT JOIN 
+            app_django_pedido_producto pp ON p.id = pp.pedido_id
+        WHERE 
+            (p.fecha_creacion >= %s AND p.fecha_creacion <= %s)
+        GROUP BY 
+            c.id, c.nombre
+        ORDER BY 
+            total_compras DESC;
+
+            '''
+        # usar coalesce para mostrar 0 en vez de null
+
+    with connection.cursor() as cursor:
+        cursor.execute(query, [desde, hasta])
+        rows = cursor.fetchall()
+        columns = [col[0] for col in cursor.description]
+        results = []
+        for row in rows:
+            row_dict = {}
+            for idx, col in enumerate(columns):
+                row_dict[col] = row[idx]
+            results.append(row_dict)
+
+    return Response(results)
+
+@api_view(['POST'])
 def devoluciones_pedidos_cliente(request):
     cliente_id = request.data.get('cliente_id')
 

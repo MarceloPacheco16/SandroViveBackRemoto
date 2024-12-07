@@ -66,6 +66,10 @@ urlpatterns = [
     path('contacto/envia-email/', views.contacto_enviar_email),
     
     path('informe/pedido-fecha-desde-hasta/', views.informe_pedidos_fecha_desde_hasta_raw),
+    path('informe/devoluciones-fecha-desde-hasta/', views.informe_devoluciones_fecha_desde_hasta_raw),
+    path('informe/menores-ventas-fecha-desde-hasta/', views.informe_menores_ventas_fecha_desde_hasta_raw),
+    path('informe/mayores-ventas-fecha-desde-hasta/', views.informe_mayores_ventas_fecha_desde_hasta_raw),
+    path('informe/clientes-destacados-fecha-desde-hasta/', views.informe_clientes_destacados_fecha_desde_hasta_raw),
     
     path('devoluciones/pedidos-cliente/', views.devoluciones_pedidos_cliente),
     path('devoluciones/productos-pedido/', views.devoluciones_productos_pedido),
