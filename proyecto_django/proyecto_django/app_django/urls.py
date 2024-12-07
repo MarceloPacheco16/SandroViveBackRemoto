@@ -67,8 +67,9 @@ urlpatterns = [
     
     path('informe/pedido-fecha-desde-hasta/', views.informe_pedidos_fecha_desde_hasta_raw),
     
-    path('devoluciones/pedidos-cliente/', views.obtener_devoluciones_cliente),
-    path('devoluciones/productos-pedido/', views.obtener_productos_pedido_con_devoluciones),
+    path('devoluciones/pedidos-cliente/', views.devoluciones_pedidos_cliente),
+    path('devoluciones/productos-pedido/', views.devoluciones_productos_pedido),
+    path('devoluciones/<int:cliente_id>/', views.listado_devoluciones_por_cliente),
 
     path('get_cloudinary_signature/', views.get_cloudinary_signature, name='get_cloudinary_signature'),
 ]

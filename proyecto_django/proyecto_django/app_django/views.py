@@ -330,10 +330,25 @@ class MotivoDevolucionDetail(generics.RetrieveUpdateDestroyAPIView):
 class DevolucionesList(generics.ListCreateAPIView):
     queryset = Devoluciones.objects.all()
     serializer_class = DevolucionesSerializer
+    parser_classes = (MultiPartParser, FormParser)  # Añade estos parsers para manejar archivos
+
+    # def post(self, request, *args, **kwargs):
+    #     # Crear un serializer con los datos recibidos
+    #     serializer = self.get_serializer(data=request.data)
+    #     print("Datos recibidos:", request.data)
+
+    #     # Validar el serializer
+    #     if not serializer.is_valid():
+    #         print("Errores de validación:", serializer.errors)
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    #     print("Datos correctos")
+    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 class DevolucionesDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Devoluciones.objects.all()
     serializer_class = DevolucionesSerializer
+    parser_classes = (MultiPartParser, FormParser)  # Añade estos parsers para manejar archivos
 
 # Archivos de clave pública y privada
 PUBLIC_KEY_FILE = "public_key.pem"
@@ -829,7 +844,7 @@ def informe_pedidos_fecha_desde_hasta_raw(request):
     return Response(results)
 
 @api_view(['POST'])
-def obtener_devoluciones_cliente(request):
+def devoluciones_pedidos_cliente(request):
     cliente_id = request.data.get('cliente_id')
 
     if not cliente_id:
@@ -837,11 +852,10 @@ def obtener_devoluciones_cliente(request):
 
     query = '''
         SELECT 
-            d.fecha_solicitud || ' - Nº: ' || p.id AS devolucion_info
+            p.id AS pedido_id,
+            p.fecha_creacion || ' - Nº: ' || p.id AS pedido_info
         FROM 
-            app_django_devoluciones d
-        JOIN 
-            app_django_pedido p ON d.pedido_id = p.id
+            app_django_pedido p
         JOIN 
             app_django_cliente c ON p.cliente_id = c.id
         WHERE 
@@ -851,37 +865,18 @@ def obtener_devoluciones_cliente(request):
     with connection.cursor() as cursor:
         cursor.execute(query, [cliente_id])
         rows = cursor.fetchall()
-        results = [{"devolucion_info": row[0]} for row in rows]
+        # Obtenemos los nombres de las columnas automáticamente
+        columns = [col[0] for col in cursor.description]
+        # Construimos el resultado dinámicamente
+        results = [
+            {columns[idx]: value for idx, value in enumerate(row)}
+            for row in rows
+        ]
 
     return Response(results)
 
-# @api_view(['POST'])
-# def obtener_productos_pedido(request):
-#     pedido_id = request.data.get('pedido_id')
-
-#     if not pedido_id:
-#         return Response({"error": "El campo 'pedido_id' es obligatorio."}, status=400)
-
-#     query = '''
-#         SELECT 
-#             prod.nombre || ' | Cantidad: ' || pp.cantidad AS producto_info
-#         FROM 
-#             app_django_pedido_producto pp
-#         INNER JOIN 
-#             app_django_producto prod ON pp.producto_id = prod.id
-#         WHERE 
-#             pp.pedido_id = %s;
-#     '''
-
-#     with connection.cursor() as cursor:
-#         cursor.execute(query, [pedido_id])
-#         rows = cursor.fetchall()
-#         results = [{"producto_info": row[0]} for row in rows]
-
-#     return Response(results)
-
 @api_view(['POST'])
-def obtener_productos_pedido_con_devoluciones(request):
+def devoluciones_productos_pedido(request):
     pedido_id = request.data.get('pedido_id')
 
     if not pedido_id:
@@ -889,11 +884,19 @@ def obtener_productos_pedido_con_devoluciones(request):
 
     query = '''
         SELECT 
+            pp.id AS pedido_producto_id,
+            pp.producto_id AS producto_id,
+            (pp.cantidad - COALESCE(
+                (SELECT SUM(d.cantidad) 
+                 FROM app_django_devoluciones d 
+                 WHERE d.pedido_id = pp.pedido_id AND d.producto_id = pp.producto_id AND d.estado_id <> 3), 
+                0)
+            ) AS cantidad_disponible,
             prod.nombre || ' | Cantidad: ' || 
             (pp.cantidad - COALESCE(
                 (SELECT SUM(d.cantidad) 
                  FROM app_django_devoluciones d 
-                 WHERE d.pedido_id = pp.pedido_id AND d.producto_id = pp.producto_id), 
+                 WHERE d.pedido_id = pp.pedido_id AND d.producto_id = pp.producto_id AND d.estado_id <> 3), 
                 0)
             ) AS producto_info
         FROM 
@@ -907,9 +910,64 @@ def obtener_productos_pedido_con_devoluciones(request):
     with connection.cursor() as cursor:
         cursor.execute(query, [pedido_id])
         rows = cursor.fetchall()
-        results = [{"producto_info": row[0]} for row in rows]
+        # Obtenemos los nombres de las columnas automáticamente
+        columns = [col[0] for col in cursor.description]
+        # Construimos el resultado dinámicamente
+        results = [
+            {columns[idx]: value for idx, value in enumerate(row)}
+            for row in rows
+        ]
 
     return Response(results)
+
+# def obtener_devoluciones(request):
+#     devoluciones = Devoluciones.objects.select_related('producto').all()
+#     resultado = []
+#     for devolucion in devoluciones:
+#         resultado.append({
+#             'id': devolucion.id,
+#             'pedido': devolucion.pedido.id if devolucion.pedido else None,
+#             'producto_nombre': devolucion.producto.nombre if devolucion.producto else None,
+#             'producto_imagen': devolucion.producto.imagen.url if devolucion.producto and devolucion.producto.imagen else None,
+#             'motivo': devolucion.motivo.nombre if devolucion.motivo else None,
+#             'estado': devolucion.estado.nombre if devolucion.estado else None,
+#             'cantidad': devolucion.cantidad,
+#             'observacion': devolucion.observacion,
+#             'fecha_solicitud': devolucion.fecha_solicitud,
+#         })
+#     return JsonResponse(resultado, safe=False)
+
+def listado_devoluciones_por_cliente(request, cliente_id):
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+    # devoluciones = Devoluciones.objects.filter(pedido__cliente=cliente).select_related('producto', 'motivo', 'estado')
+    devoluciones = (
+        Devoluciones.objects
+        .filter(pedido__cliente=cliente)
+        .select_related('pedido','producto', 'motivo', 'estado')
+        .order_by('-id')  # Ordenar por ID en orden descendente
+    )
+
+    resultado = [
+        {
+            'id': devolucion.id,
+            'pedido': devolucion.pedido.id,
+            'fecha_solicitud': devolucion.fecha_solicitud,
+            'producto': {
+                'id': devolucion.producto.id,
+                'nombre': devolucion.producto.nombre,
+                'imagen': devolucion.producto.imagen.url if devolucion.producto.imagen else None
+            },
+            'motivo': devolucion.motivo.nombre if devolucion.motivo else None,
+            'estado': devolucion.estado.nombre if devolucion.estado else None,
+            'cantidad': devolucion.cantidad,
+            'imagen': devolucion.imagen.url if devolucion.imagen else None,
+            'observacion': devolucion.observacion
+        }
+        for devolucion in devoluciones
+    ]
+
+    return JsonResponse(resultado, safe=False)
+    # return JsonResponse({'devoluciones': resultado}, safe=False)
 
 @csrf_exempt  # Si estás trabajando con formularios POST sin autenticar
 def get_cloudinary_signature(request):

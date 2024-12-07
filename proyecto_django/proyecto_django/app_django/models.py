@@ -133,10 +133,10 @@ class Talle(models.Model):
     activo = models.IntegerField() # 0: Inactivo 1: Activo
 
 class EstadoDevolucion(models.Model):
-    estado = models.CharField(max_length=20)
+    nombre = models.CharField(max_length=20)
 
 class MotivoDevolucion(models.Model):
-    motivo = models.CharField(max_length=20)
+    nombre = models.CharField(max_length=20)
 
 class Devoluciones(models.Model):
     pedido = models.ForeignKey(Pedido, null=True, on_delete=models.SET_NULL)
@@ -145,4 +145,5 @@ class Devoluciones(models.Model):
     motivo = models.ForeignKey(MotivoDevolucion, null=True, on_delete=models.SET_NULL)
     estado = models.ForeignKey(EstadoDevolucion, null=True, on_delete=models.SET_NULL)
     cantidad = models.IntegerField()
+    imagen = models.ImageField(null=True, blank=True) # Cloudinary manejará la carga automáticamente
     observacion = models.TextField(blank=True, max_length=200)

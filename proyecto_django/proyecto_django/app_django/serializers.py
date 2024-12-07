@@ -185,14 +185,51 @@ class TalleSerializer(serializers.ModelSerializer):
 class EstadoDevolucionSerializer(serializers.ModelSerializer):
     class Meta:
         model = EstadoDevolucion
-        fields = ('id','estado')
+        fields = ('id','nombre')
  
 class MotivoDevolucionSerializer(serializers.ModelSerializer):
     class Meta:
         model = MotivoDevolucion
-        fields = ('id','motivo')
+        fields = ('id','nombre')
 
 class DevolucionesSerializer(serializers.ModelSerializer):
+    imagen = serializers.ImageField(allow_null=True, required=False)  # Permitir null y no requerirlo en el POST/PUT
+    
     class Meta:
         model = Devoluciones
-        fields = ('id','pedido', 'fecha_solicitud', 'producto','motivo', 'estado', 'cantidad','observacion')
+        fields = ('id', 'pedido', 'fecha_solicitud', 'producto', 'motivo', 'estado', 'cantidad', 'imagen', 'observacion')
+
+    def subir_imagen_a_cloudinary(self, imagen, devolucion_id):
+        now = datetime.datetime.now()
+        fecha_actual = now.strftime("%Y%m%d")
+        hora_actual = now.strftime("%H%M%S")
+        nombre_imagen = f"devolucion_{devolucion_id}_{fecha_actual}_{hora_actual}"
+        return cloudinary.uploader.upload(imagen, public_id=nombre_imagen, overwrite=True, folder='media')
+
+    def create(self, validated_data):
+        # Extraer el campo `imagen` si está presente en los datos validados
+        imagen = validated_data.pop('imagen', None)
+        devolucion = Devoluciones.objects.create(**validated_data)
+
+        if imagen:
+            upload_result = self.subir_imagen_a_cloudinary(imagen, devolucion.id)
+            devolucion.imagen = upload_result['secure_url'].split('/')[-1] 
+            devolucion.save()
+
+        return devolucion
+
+    def update(self, instance, validated_data):
+        # Extraer el campo `imagen` si está presente en los datos validados
+        imagen = validated_data.pop('imagen', None)
+        instance = super().update(instance, validated_data)
+
+        if imagen:
+            upload_result = self.subir_imagen_a_cloudinary(imagen, instance.id)
+            instance.imagen = upload_result['secure_url'].split('/')[-1]
+            instance.save()
+        elif 'imagen' in validated_data and validated_data['imagen'] is None:
+            # Si `imagen` fue explícitamente enviada como `null`, eliminarla
+            instance.imagen = None
+            instance.save()
+
+        return instance

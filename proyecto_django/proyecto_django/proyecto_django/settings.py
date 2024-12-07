@@ -83,15 +83,15 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',  # Permitir acceso a todos los usuarios
     ],
-    # Agrega otros ajustes que consideres necesarios
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',  # Control de la tasa de solicitudes para usuarios anónimos
-        'rest_framework.throttling.UserRateThrottle',  # Control de la tasa de solicitudes para usuarios autenticados
-    ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '100/day',  # 100 solicitudes por día para anónimos
-        'user': '1000/day',  # 1000 solicitudes por día para usuarios autenticados
-    },
+    # # Agrega otros ajustes que consideres necesarios
+    # 'DEFAULT_THROTTLE_CLASSES': [
+    #     'rest_framework.throttling.AnonRateThrottle',  # Control de la tasa de solicitudes para usuarios anónimos
+    #     'rest_framework.throttling.UserRateThrottle',  # Control de la tasa de solicitudes para usuarios autenticados
+    # ],
+    # 'DEFAULT_THROTTLE_RATES': {
+    #     'anon': '100/day',  # 100 solicitudes por día para anónimos
+    #     'user': '1000/day',  # 1000 solicitudes por día para usuarios autenticados
+    # },
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',  # Renderiza respuestas en formato JSON
         'rest_framework.renderers.BrowsableAPIRenderer',  # Agregar el renderizador de navegador
@@ -227,7 +227,7 @@ CLOUDINARY_STORAGE = {
 
 # Archivos estáticos
 STATIC_URL = '/static/'  # URL base para archivos estáticos
-STATICFILES_DIRS = [BASE_DIR / 'static']  # Carpeta local donde están los archivos estáticos
+# STATICFILES_DIRS = [BASE_DIR / 'static']  # Carpeta local donde están los archivos estáticos
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Carpeta donde collectstatic recopila archivos
 
 # # Usando Cloudinary para los archivos estáticos
