@@ -993,7 +993,7 @@ def informe_mayores_ventas_fecha_desde_hasta_raw(request):
         SELECT v.*
         FROM ventas v, promedio_ventas p
         WHERE v.total_vendido > p.promedio
-        ORDER BY v.total_vendido ASC;
+        ORDER BY v.total_vendido DESC;
 
 
             '''

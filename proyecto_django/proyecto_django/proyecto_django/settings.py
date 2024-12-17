@@ -17,8 +17,8 @@ import os
 # import dj_database_url
 
 # # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+DEBUG = True
+# DEBUG = os.getenv('DEBUG', 'False') == 'True'
 print(f"DEBUG: {DEBUG}")
 
 
