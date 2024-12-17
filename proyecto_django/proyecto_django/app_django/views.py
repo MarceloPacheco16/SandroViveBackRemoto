@@ -565,13 +565,19 @@ def filtrar_productos(request):
     # Filtramos para que esten solo los Productos Activos
     productos = Producto.objects.filter(activo=1)
 
+    # Filtro de nombre o descripción
+    if nombre or descripcion:
+        productos = productos.filter(
+            Q(nombre__icontains=nombre) | Q(descripcion__icontains=descripcion)
+        )
+
     # Construyendo la consulta de filtro
     # Filtro de nombre
-    if nombre:
-        productos = productos.filter(nombre__icontains=nombre)
+    #if nombre:
+    #    productos = productos.filter(nombre__icontains=nombre)
     # Filtro de descripcion
-    if descripcion:
-        productos = productos.filter(descripcion__icontains=descripcion)
+    #if descripcion:
+    #    productos = productos.filter(descripcion__icontains=descripcion)
     # Filtro de categoria
     if categoria_id:
         productos = productos.filter(categoria_id=categoria_id)
